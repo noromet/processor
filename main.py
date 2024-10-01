@@ -26,6 +26,8 @@ def get_args():
     parser.add_argument("--all", action="store_true", help="Cook all stations")
     parser.add_argument("--id", type=str, help="Read a single weather station by id")
     parser.add_argument("--dry-run", action="store_true", help="Perform a dry run")
+    parser.add_argument("--today", action="store_true", help="Process today's data")
+    parser.add_argument("--yesterday", action="store_true", help="Process today's data")
     parser.add_argument("--date", type=datetime.date.fromisoformat, help="Date to process, in ISO format")
     parser.add_argument("--multithread-threshold", type=int, default=-1, help="Threshold for enabling multithreading")
     return parser.parse_args()
@@ -44,6 +46,16 @@ def validate_args(args):
     if args.date:
         if args.date > datetime.date.today():
             raise ValueError("Date must be yesterday's or earlier")
+        
+    #today and yesterday are mutually exclusive
+    if args.today and args.yesterday:
+        raise ValueError("Cannot specify both --today and --yesterday")
+    
+    #either of the previous overrides date
+    if args.today:
+        args.date = datetime.date.today()
+    elif args.yesterday:
+        args.date = datetime.date.today() - datetime.timedelta(days=1)
 #endregion
 
 # region processing
