@@ -37,17 +37,6 @@ class Database:
         cls.__connection_pool.closeall()
         
     @classmethod
-    def save_record(cls, record: WeatherRecord) -> None:
-        """Save a weather record to the database."""
-        record.id = str(uuid.uuid4())
-        
-        with CursorFromConnectionFromPool() as cursor:
-            cursor.execute(
-                "INSERT INTO weather_record (id, station_id, source_timestamp, taken_timestamp, temperature, wind_speed, wind_direction, rain, humidity, pressure, flagged) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
-                (record.id, record.station_id, record.source_timestamp, record.taken_timestamp, record.temperature, record.wind_speed, record.wind_direction, record.rain, record.humidity, record.pressure, record.flagged)
-            )
-
-    @classmethod
     def save_daily_record(cls, record: DailyRecord) -> None:
         """Save a daily record to the database."""
         record.id = str(uuid.uuid4())
@@ -100,7 +89,7 @@ def get_records_for_station_and_date(station_id: str, date: datetime.date) -> Li
     """Get all weather records for a specific station and date."""
     with CursorFromConnectionFromPool() as cursor:
         cursor.execute(
-            "SELECT id, station_id, source_timestamp, temperature, wind_speed, wind_direction, rain, humidity, pressure, flagged, taken_timestamp "
+            "SELECT id, station_id, source_timestamp, temperature, wind_speed, max_wind_speed, wind_direction, rain, humidity, pressure, flagged, taken_timestamp "
             "FROM weather_record "
             "WHERE station_id = %s AND DATE(taken_timestamp) = %s", 
             (station_id, date)
