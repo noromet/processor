@@ -1,5 +1,6 @@
 from schema import WeatherRecord, DailyRecord
 import uuid
+import pandas as pd
 
 def construct_record(tuple) -> WeatherRecord:
     return WeatherRecord(
@@ -16,46 +17,35 @@ def construct_record(tuple) -> WeatherRecord:
     )
 
 def build_daily_record(records: list[WeatherRecord]) -> DailyRecord:
-    print(f"Building daily record for station {records[0].station_id} on {records[0].taken_timestamp.date()}. {len(records)} records found.")
+    # Convert records to DataFrame
+    df = pd.DataFrame([{
+        'station_id': record.station_id,
+        'taken_timestamp': record.taken_timestamp,
+        'wind_speed': record.wind_speed,
+        'wind_direction': record.wind_direction,
+        'temperature': record.temperature,
+        'pressure': record.pressure,
+        'rain': record.rain,
+        'flagged': record.flagged
+    } for record in records])
 
-    high_wind_speed = float('-inf')
-    high_wind_direction = None
-    high_temperature = float('-inf')
-    low_temperature = float('inf')
-    high_pressure = float('-inf')
-    low_pressure = float('inf')
-    total_rain = 0
-    flagged = False
-
-    for record in records:
-        if record.wind_speed is not None and record.wind_speed > high_wind_speed:
-            high_wind_speed = record.wind_speed
-            high_wind_direction = record.wind_direction
-
-        if record.temperature is not None:
-            if record.temperature > high_temperature:
-                high_temperature = record.temperature
-            if record.temperature < low_temperature:
-                low_temperature = record.temperature
-
-        if record.pressure is not None:
-            if record.pressure > high_pressure:
-                high_pressure = record.pressure
-            if record.pressure < low_pressure:
-                low_pressure = record.pressure
-
-        if record.rain is not None:
-            total_rain += record.rain
-
-        if record.flagged:
-            flagged = True
+    # Calculate summary statistics
+    high_wind_speed = float(df['wind_speed'].max())
+    high_wind_direction = float(df.loc[df['wind_speed'].idxmax(), 'wind_direction']) if pd.notna(high_wind_speed) else None
+    high_temperature = float(df['temperature'].max())
+    low_temperature = float(df['temperature'].min())
+    high_pressure = float(df['pressure'].max())
+    low_pressure = float(df['pressure'].min())
+    total_rain = float(df['rain'].sum())
+    flagged = bool(df['flagged'].any())
 
     # Handle cases where no valid data was found
-    high_wind_speed = high_wind_speed if high_wind_speed != float('-inf') else 0
-    high_temperature = high_temperature if high_temperature != float('-inf') else 0
-    low_temperature = low_temperature if low_temperature != float('inf') else 0
-    high_pressure = high_pressure if high_pressure != float('-inf') else 0
-    low_pressure = low_pressure if low_pressure != float('inf') else 0
+    high_wind_speed = high_wind_speed if pd.notna(high_wind_speed) else 0.0
+    high_temperature = high_temperature if pd.notna(high_temperature) else 0.0
+    low_temperature = low_temperature if pd.notna(low_temperature) else 0.0
+    high_pressure = high_pressure if pd.notna(high_pressure) else 0.0
+    low_pressure = low_pressure if pd.notna(low_pressure) else 0.0
+    total_rain = total_rain if pd.notna(total_rain) else 0.0
 
     return DailyRecord(
         id=str(uuid.uuid4()),
