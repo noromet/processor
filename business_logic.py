@@ -32,15 +32,21 @@ def build_daily_record(records: list[WeatherRecord]) -> DailyRecord:
     } for record in records])
 
     # Calculate summary statistics
-    max_wind_speed = df['max_wind_speed'].max()
-    high_wind_speed = max_wind_speed if pd.notna(max_wind_speed) else df['wind_speed'].max()
-    high_wind_direction = float(df.loc[df['max_wind_speed'].idxmax(), 'wind_direction']) if pd.notna(high_wind_speed) else float(df.loc[df['wind_speed'].idxmax(), 'wind_direction']) if pd.notna(df['wind_speed'].max()) else 0.0
     high_temperature = float(df['temperature'].max())
     low_temperature = float(df['temperature'].min())
     high_pressure = float(df['pressure'].max())
     low_pressure = float(df['pressure'].min())
     total_rain = float(df['rain'].sum())
     flagged = bool(df['flagged'].any())
+
+    #wind
+    are_all_max_wind_speed_na = df['max_wind_speed'].isna().all()
+    if are_all_max_wind_speed_na:
+        high_wind_speed = float(df['wind_speed'].max())
+        high_wind_direction = float(df.loc[df['wind_speed'].idxmax()]['wind_direction'])
+    else:
+        high_wind_speed = float(df['max_wind_speed'].max())
+        high_wind_direction = float(df.loc[df['max_wind_speed'].idxmax()]['wind_direction'])
 
     # Handle cases where no valid data was found
     high_wind_speed = high_wind_speed if pd.notna(high_wind_speed) else 0.0
