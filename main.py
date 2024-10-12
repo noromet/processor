@@ -70,7 +70,7 @@ def process_station(station: tuple, date: datetime.date): # station is a tuple l
             print(f"No records retrieved for station {station[0]}")
             return
         
-        daily_record = build_daily_record(records)
+        daily_record = build_daily_record(records, date)
 
         if not DRY_RUN:
             Database.save_daily_record(daily_record)

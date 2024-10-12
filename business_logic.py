@@ -1,6 +1,7 @@
 from schema import WeatherRecord, DailyRecord
 import uuid
 import pandas as pd
+import datetime
 
 def construct_record(tuple) -> WeatherRecord:
     return WeatherRecord(
@@ -17,7 +18,7 @@ def construct_record(tuple) -> WeatherRecord:
         flagged=tuple[10]
     )
 
-def build_daily_record(records: list[WeatherRecord]) -> DailyRecord:
+def build_daily_record(records: list[WeatherRecord], date: datetime.datetime) -> DailyRecord:
     # Convert records to DataFrame
     df = pd.DataFrame([{
         'station_id': record.station_id,
@@ -60,7 +61,7 @@ def build_daily_record(records: list[WeatherRecord]) -> DailyRecord:
     return DailyRecord(
         id=str(uuid.uuid4()),
         station_id=records[0].station_id,
-        date=records[0].taken_timestamp.date(),
+        date=date,
         high_temperature=high_temperature,
         low_temperature=low_temperature,
         high_wind_speed=high_wind_speed,
