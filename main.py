@@ -9,6 +9,8 @@ import datetime
 from business_logic import build_daily_record, construct_record
 from database import Database, get_all_stations, get_single_station, get_records_for_station_and_date
 
+from uuid import uuid4
+
 # region definitions
 print_red = lambda text: print(f"\033[91m{text}\033[00m")
 print_green = lambda text: print(f"\033[92m{text}\033[00m")
@@ -18,6 +20,7 @@ load_dotenv(verbose=True)
 DB_URL = os.getenv("DATABASE_CONNECTION_URL")
 MAX_THREADS = int(os.getenv("MAX_THREADS"))
 DRY_RUN = False
+RUN_ID = uuid4().hex
 # endregion
 
 #region argument processing
@@ -71,6 +74,7 @@ def process_station(station: tuple, date: datetime.date): # station is a tuple l
             return
         
         daily_record = build_daily_record(records, date)
+        daily_record.cookRunId = RUN_ID
 
         if not DRY_RUN:
             Database.save_daily_record(daily_record)

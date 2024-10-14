@@ -43,8 +43,8 @@ class Database:
         
         with CursorFromConnectionFromPool() as cursor:
             cursor.execute(
-                "INSERT INTO daily_record (id, station_id, date, high_temperature, low_temperature, high_wind_speed, high_wind_direction, high_pressure, low_pressure, rain, flagged, finished) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
-                (record.id, record.station_id, record.date, record.high_temperature, record.low_temperature, record.high_wind_speed, record.high_wind_direction, record.high_pressure, record.low_pressure, record.rain, record.flagged, record.finished)
+                "INSERT INTO daily_record (id, station_id, date, high_temperature, low_temperature, high_wind_speed, high_wind_direction, high_pressure, low_pressure, rain, flagged, finished, cook_run_id) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
+                (record.id, record.station_id, record.date, record.high_temperature, record.low_temperature, record.high_wind_speed, record.high_wind_direction, record.high_pressure, record.low_pressure, record.rain, record.flagged, record.finished, record.cookRunId)
             )
 
 
@@ -89,7 +89,7 @@ def get_records_for_station_and_date(station_id: str, date: datetime.date) -> Li
     """Get all weather records for a specific station and date."""
     with CursorFromConnectionFromPool() as cursor:
         cursor.execute(
-            "SELECT id, station_id, source_timestamp, temperature, wind_speed, max_wind_speed, wind_direction, rain, humidity, pressure, flagged, taken_timestamp "
+            "SELECT id, station_id, source_timestamp, temperature, wind_speed, max_wind_speed, wind_direction, rain, humidity, pressure, flagged, taken_timestamp, gatherer_run_id "
             "FROM weather_record "
             "WHERE station_id = %s AND DATE(taken_timestamp) = %s", 
             (station_id, date)

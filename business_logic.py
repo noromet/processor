@@ -15,7 +15,8 @@ def construct_record(tuple) -> WeatherRecord:
         rain=tuple[7],
         humidity=tuple[8],
         pressure=tuple[9],
-        flagged=tuple[10]
+        flagged=tuple[10],
+        gathererRunId=tuple[11]
     )
 
 def build_daily_record(records: list[WeatherRecord], date: datetime.datetime) -> DailyRecord:
@@ -70,5 +71,6 @@ def build_daily_record(records: list[WeatherRecord], date: datetime.datetime) ->
         low_pressure=low_pressure,
         rain=total_rain,
         flagged=flagged,
-        finished=True
+        finished=True,
+        cookRunId=None
     )

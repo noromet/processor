@@ -7,7 +7,7 @@ class WeatherStation:
         self.token = token
         
 class WeatherRecord:
-    def __init__(self, id: uuid.uuid4, station_id: uuid.uuid4, source_timestamp: datetime.datetime, temperature: float, wind_speed: float, max_wind_speed: float, wind_direction: float, rain: float, humidity: float, pressure: float, flagged: bool):
+    def __init__(self, id: uuid.uuid4, station_id: uuid.uuid4, source_timestamp: datetime.datetime, temperature: float, wind_speed: float, max_wind_speed: float, wind_direction: float, rain: float, humidity: float, pressure: float, flagged: bool, gathererRunId: uuid.uuid4):
         self.id = id
         self.station_id = station_id
         self.source_timestamp = source_timestamp
@@ -20,9 +20,10 @@ class WeatherRecord:
         self.pressure = pressure
         self.flagged = flagged
         self.taken_timestamp = datetime.datetime.now()
+        self.gathererRunId = gathererRunId
 
 class DailyRecord:
-    def __init__(self, id: uuid.uuid4, station_id: uuid.uuid4, date: datetime.date, high_temperature: float = None, low_temperature: float = None, high_wind_speed: float = None, high_wind_direction: float = None, high_pressure: float = None, low_pressure: float = None, rain: float = None, flagged: bool = False, finished: bool = False):
+    def __init__(self, id: uuid.uuid4, station_id: uuid.uuid4, date: datetime.date, high_temperature: float = None, low_temperature: float = None, high_wind_speed: float = None, high_wind_direction: float = None, high_pressure: float = None, low_pressure: float = None, rain: float = None, flagged: bool = False, finished: bool = False, cookRunId: uuid.uuid4 = None):
         self.id = id
         self.station_id = station_id
         self.date = date
@@ -35,3 +36,4 @@ class DailyRecord:
         self.rain = rain
         self.flagged = flagged
         self.finished = finished
+        self.cookRunId = cookRunId
