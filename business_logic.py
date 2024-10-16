@@ -16,7 +16,8 @@ def construct_record(tuple) -> WeatherRecord:
         humidity=tuple[8],
         pressure=tuple[9],
         flagged=tuple[10],
-        gathererRunId=tuple[11]
+        gathererRunId=tuple[11],
+        cumulativeRain=tuple[12]
     )
 
 def build_daily_record(records: list[WeatherRecord], date: datetime.datetime) -> DailyRecord:
@@ -30,6 +31,7 @@ def build_daily_record(records: list[WeatherRecord], date: datetime.datetime) ->
         'temperature': record.temperature,
         'pressure': record.pressure,
         'rain': record.rain,
+        'cumulativeRain': record.cumulativeRain,
         'flagged': record.flagged
     } for record in records])
 
@@ -38,7 +40,6 @@ def build_daily_record(records: list[WeatherRecord], date: datetime.datetime) ->
     low_temperature = float(df['temperature'].min())
     high_pressure = float(df['pressure'].max())
     low_pressure = float(df['pressure'].min())
-    total_rain = float(df['rain'].sum())
     flagged = bool(df['flagged'].any())
 
     #wind
@@ -49,6 +50,11 @@ def build_daily_record(records: list[WeatherRecord], date: datetime.datetime) ->
     else:
         high_wind_speed = float(df['max_wind_speed'].max())
         high_wind_direction = float(df.loc[df['max_wind_speed'].idxmax()]['wind_direction'])
+
+    #rain
+    max_cum_rain = float(df['cumulativeRain'].max())
+    if max_cum_rain == 0 or pd.isna(max_cum_rain):
+        total_rain = float(df['rain'].sum())
 
     # Handle cases where no valid data was found
     high_wind_speed = high_wind_speed if pd.notna(high_wind_speed) else 0.0

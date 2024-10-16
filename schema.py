@@ -7,7 +7,21 @@ class WeatherStation:
         self.token = token
         
 class WeatherRecord:
-    def __init__(self, id: uuid.uuid4, station_id: uuid.uuid4, source_timestamp: datetime.datetime, temperature: float, wind_speed: float, max_wind_speed: float, wind_direction: float, rain: float, humidity: float, pressure: float, flagged: bool, gathererRunId: uuid.uuid4):
+    def __init__(self, 
+                 id: uuid.uuid4, 
+                 station_id: uuid.uuid4, 
+                 source_timestamp: datetime.datetime, 
+                 temperature: float, 
+                 wind_speed: float, 
+                 max_wind_speed: float, 
+                 wind_direction: float, 
+                 rain: float, 
+                 humidity: float, 
+                 pressure: float, 
+                 flagged: bool, 
+                 gathererRunId: uuid.uuid4, 
+                 cumulativeRain: float):
+        
         self.id = id
         self.station_id = station_id
         self.source_timestamp = source_timestamp
@@ -16,6 +30,7 @@ class WeatherRecord:
         self.max_wind_speed = max_wind_speed
         self.wind_direction = wind_direction
         self.rain = rain
+        self.cumulativeRain = cumulativeRain
         self.humidity = humidity
         self.pressure = pressure
         self.flagged = flagged
