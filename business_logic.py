@@ -46,7 +46,11 @@ def build_daily_record(records: list[WeatherRecord], date: datetime.datetime) ->
     are_all_max_wind_speed_na = df['max_wind_speed'].isna().all()
     if are_all_max_wind_speed_na:
         high_wind_speed = float(df['wind_speed'].max())
-        high_wind_direction = float(df.loc[df['wind_speed'].idxmax()]['wind_direction'])
+
+        if pd.isna(high_wind_speed):
+            high_wind_speed = 0.0
+            high_wind_direction = 0.0
+
     else:
         high_wind_speed = float(df['max_wind_speed'].max())
         high_wind_direction = float(df.loc[df['max_wind_speed'].idxmax()]['wind_direction'])
@@ -55,6 +59,8 @@ def build_daily_record(records: list[WeatherRecord], date: datetime.datetime) ->
     max_cum_rain = float(df['cumulativeRain'].max())
     if max_cum_rain == 0 or pd.isna(max_cum_rain):
         total_rain = float(df['rain'].sum())
+    else:
+        total_rain = max_cum_rain
 
     # Handle cases where no valid data was found
     high_wind_speed = high_wind_speed if pd.notna(high_wind_speed) else 0.0

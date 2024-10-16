@@ -30,12 +30,13 @@ class WeatherRecord:
         self.max_wind_speed = max_wind_speed
         self.wind_direction = wind_direction
         self.rain = rain
-        self.cumulativeRain = cumulativeRain
         self.humidity = humidity
         self.pressure = pressure
         self.flagged = flagged
         self.taken_timestamp = datetime.datetime.now()
         self.gathererRunId = gathererRunId
+        self.cumulativeRain = cumulativeRain
+
 
 class DailyRecord:
     def __init__(self, id: uuid.uuid4, station_id: uuid.uuid4, date: datetime.date, high_temperature: float = None, low_temperature: float = None, high_wind_speed: float = None, high_wind_direction: float = None, high_pressure: float = None, low_pressure: float = None, rain: float = None, flagged: bool = False, finished: bool = False, cookRunId: uuid.uuid4 = None):
