@@ -74,14 +74,14 @@ class CursorFromConnectionFromPool:
 def get_all_stations() -> List[Tuple]:
     """Get all active weather stations."""
     with CursorFromConnectionFromPool() as cursor:
-        cursor.execute("SELECT id, name, location FROM weather_station WHERE status = 'active'")
+        cursor.execute("SELECT id, organization_name, location FROM weather_station WHERE status = 'active'")
         stations = cursor.fetchall()
         return stations
     
 def get_single_station(station_id: str) -> Tuple:
     """Get a single weather station by ID."""
     with CursorFromConnectionFromPool() as cursor:
-        cursor.execute("SELECT id, name, location FROM weather_station WHERE id = %s AND status = 'active'", (station_id,))
+        cursor.execute("SELECT id, organization_name, location FROM weather_station WHERE id = %s AND status = 'active'", (station_id,))
         station = cursor.fetchone()
         return station
     

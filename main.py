@@ -62,7 +62,7 @@ def validate_args(args):
 #endregion
 
 # region processing
-def process_station(station: tuple, date: datetime.date): # station is a tuple like id, name, location
+def process_station(station: tuple, date: datetime.date): # station is a tuple like id, organizationName, location
     print_yellow(f"Processing station {station[0]} ({station[1]})")
     
     try:
@@ -89,7 +89,7 @@ def process_station(station: tuple, date: datetime.date): # station is a tuple l
     print()
 
 def process_chunk(chunk, chunk_number):
-    print(f"Processing chunk {chunk_number} on {threading.current_thread().name}")
+    print(f"Processing chunk {chunk_number} on {threading.current_thread().organizationName}")
     for station in chunk:
         process_station(station)
 
