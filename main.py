@@ -62,7 +62,7 @@ def validate_args(args):
 #endregion
 
 # region processing
-def process_station(station: tuple, date: datetime.date): # station is a tuple like id, organizationName, location
+def process_station(station: tuple, date: datetime.date): # station is a tuple like id, location
     print_yellow(f"Processing station {station[0]} ({station[1]})")
     
     try:
@@ -89,7 +89,7 @@ def process_station(station: tuple, date: datetime.date): # station is a tuple l
     print()
 
 def process_chunk(chunk, chunk_number):
-    print(f"Processing chunk {chunk_number} on {threading.current_thread().organizationName}")
+    print(f"Processing chunk {chunk_number} on {threading.current_thread().name}")
     for station in chunk:
         process_station(station)
 
@@ -147,6 +147,8 @@ def main():
     DRY_RUN = args.dry_run
     multithread_threshold = args.multithread_threshold
 
+    print_yellow(f"Processing data for date {args.date} with run ID {RUN_ID}")
+
     if args.dry_run:
         print_yellow("[Dry run enabled]")
     else:
@@ -159,6 +161,8 @@ def main():
         process_all(multithread_threshold, args.date)
                 
     Database.close_all_connections()
+
+    print_green(f"Processing complete for run ID {RUN_ID}")
     
 if __name__ == "__main__":
     main()
