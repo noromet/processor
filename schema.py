@@ -20,7 +20,9 @@ class WeatherRecord:
                  pressure: float, 
                  flagged: bool, 
                  gathererRunId: uuid.uuid4, 
-                 cumulativeRain: float):
+                 cumulativeRain: float,
+                 maxTemp: float,
+                 minTemp: float,):
         
         self.id = id
         self.station_id = station_id
@@ -30,12 +32,14 @@ class WeatherRecord:
         self.max_wind_speed = max_wind_speed
         self.wind_direction = wind_direction
         self.rain = rain
+        self.cumulativeRain = cumulativeRain
         self.humidity = humidity
         self.pressure = pressure
         self.flagged = flagged
         self.taken_timestamp = datetime.datetime.now()
         self.gathererRunId = gathererRunId
-        self.cumulativeRain = cumulativeRain
+        self.maxTemp = maxTemp
+        self.minTemp = minTemp
 
 
 class DailyRecord:

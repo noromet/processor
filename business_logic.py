@@ -17,7 +17,9 @@ def construct_record(tuple) -> WeatherRecord:
         pressure=tuple[9],
         flagged=tuple[10],
         gathererRunId=tuple[11],
-        cumulativeRain=tuple[12]
+        cumulativeRain=tuple[12],
+        maxTemp=tuple[13],
+        minTemp=tuple[14]
     )
 
 def build_daily_record(records: list[WeatherRecord], date: datetime.datetime) -> DailyRecord:
@@ -32,28 +34,43 @@ def build_daily_record(records: list[WeatherRecord], date: datetime.datetime) ->
         'pressure': record.pressure,
         'rain': record.rain,
         'cumulativeRain': record.cumulativeRain,
-        'flagged': record.flagged
+        'flagged': record.flagged,
+        'maxTemp': record.maxTemp, # nullable
+        'minTemp': record.minTemp # nullable
     } for record in records])
 
     # Calculate summary statistics
-    high_temperature = float(df['temperature'].max())
-    low_temperature = float(df['temperature'].min())
+
+    #flagged
+    flagged = bool(df['flagged'].any())
+
+    #pressure
     high_pressure = float(df['pressure'].max())
     low_pressure = float(df['pressure'].min())
-    flagged = bool(df['flagged'].any())
 
     #wind
     are_all_max_wind_speed_na = df['max_wind_speed'].isna().all()
     if are_all_max_wind_speed_na:
         high_wind_speed = float(df['wind_speed'].max())
-
         if pd.isna(high_wind_speed):
-            high_wind_speed = 0.0
-            high_wind_direction = 0.0
-
+            high_wind_speed = None
+            high_wind_direction = None
     else:
         high_wind_speed = float(df['max_wind_speed'].max())
         high_wind_direction = float(df.loc[df['max_wind_speed'].idxmax()]['wind_direction'])
+
+    #temperature
+    are_all_max_temp_na = df['maxTemp'].isna().all()
+    are_all_min_temp_na = df['minTemp'].isna().all()
+    if are_all_max_temp_na:
+        high_temperature = float(df['temperature'].max())
+    else:
+        high_temperature = float(df['maxTemp'].max())
+
+    if are_all_min_temp_na:
+        low_temperature = float(df['temperature'].min())
+    else:
+        low_temperature = float(df['minTemp'].min())
 
     #rain
     max_cum_rain = float(df['cumulativeRain'].max())
@@ -63,13 +80,13 @@ def build_daily_record(records: list[WeatherRecord], date: datetime.datetime) ->
         total_rain = max_cum_rain
 
     # Handle cases where no valid data was found
-    high_wind_speed = high_wind_speed if pd.notna(high_wind_speed) else 0.0
-    high_wind_direction = high_wind_direction if pd.notna(high_wind_direction) else 0.0
-    high_temperature = high_temperature if pd.notna(high_temperature) else 0.0
-    low_temperature = low_temperature if pd.notna(low_temperature) else 0.0
-    high_pressure = high_pressure if pd.notna(high_pressure) else 0.0
-    low_pressure = low_pressure if pd.notna(low_pressure) else 0.0
-    total_rain = total_rain if pd.notna(total_rain) else 0.0
+    high_wind_speed = high_wind_speed if pd.notna(high_wind_speed) else None
+    high_wind_direction = high_wind_direction if pd.notna(high_wind_direction) else None
+    high_temperature = high_temperature if pd.notna(high_temperature) else None
+    low_temperature = low_temperature if pd.notna(low_temperature) else None
+    high_pressure = high_pressure if pd.notna(high_pressure) else None
+    low_pressure = low_pressure if pd.notna(low_pressure) else None
+    total_rain = total_rain if pd.notna(total_rain) else None
 
     return DailyRecord(
         id=str(uuid.uuid4()),
