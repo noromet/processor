@@ -19,7 +19,8 @@ def construct_record(tuple) -> WeatherRecord:
         gathererRunId=tuple[11],
         cumulativeRain=tuple[12],
         maxTemp=tuple[13],
-        minTemp=tuple[14]
+        minTemp=tuple[14],
+        windGust=tuple[15]
     )
 
 def build_daily_record(records: list[WeatherRecord], date: datetime.datetime) -> DailyRecord:
@@ -28,7 +29,7 @@ def build_daily_record(records: list[WeatherRecord], date: datetime.datetime) ->
         'station_id': record.station_id,
         'taken_timestamp': record.taken_timestamp,
         'wind_speed': record.wind_speed,
-        'max_wind_speed': record.max_wind_speed,
+        'max_wind_speed': record.max_wind_speed, # nullable
         'wind_direction': record.wind_direction,
         'temperature': record.temperature,
         'pressure': record.pressure,
@@ -36,7 +37,8 @@ def build_daily_record(records: list[WeatherRecord], date: datetime.datetime) ->
         'cumulativeRain': record.cumulativeRain,
         'flagged': record.flagged,
         'maxTemp': record.maxTemp, # nullable
-        'minTemp': record.minTemp # nullable
+        'minTemp': record.minTemp, # nullable
+        'windGust': record.windGust
     } for record in records])
 
     # Calculate summary statistics
@@ -51,13 +53,15 @@ def build_daily_record(records: list[WeatherRecord], date: datetime.datetime) ->
     #wind
     are_all_max_wind_speed_na = df['max_wind_speed'].isna().all()
     if are_all_max_wind_speed_na:
-        high_wind_speed = float(df['wind_speed'].max())
+        high_wind_speed = float(df[['wind_speed', 'windGust']].max().max())
         if pd.isna(high_wind_speed):
             high_wind_speed = None
             high_wind_direction = None
+        else:
+            high_wind_direction = float(df.loc[df[['wind_speed', 'windGust']].idxmax().max()]['wind_direction'])
     else:
-        high_wind_speed = float(df['max_wind_speed'].max())
-        high_wind_direction = float(df.loc[df['max_wind_speed'].idxmax()]['wind_direction'])
+        high_wind_speed = float(df[['max_wind_speed', 'windGust']].max().max())
+        high_wind_direction = float(df.loc[df[['max_wind_speed', 'windGust']].idxmax().max()]['wind_direction'])
 
     #temperature
     are_all_max_temp_na = df['maxTemp'].isna().all()

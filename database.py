@@ -90,7 +90,7 @@ def get_records_for_station_and_date(station_id: str, date: datetime.date) -> Li
     with CursorFromConnectionFromPool() as cursor:
 
         cursor.execute(
-            "SELECT id, station_id, source_timestamp, temperature, wind_speed, max_wind_speed, wind_direction, rain, humidity, pressure, flagged, gatherer_thread_id, cumulative_rain, max_temp, min_temp "
+            "SELECT id, station_id, source_timestamp, temperature, wind_speed, max_wind_speed, wind_direction, rain, humidity, pressure, flagged, gatherer_thread_id, cumulative_rain, max_temp, min_temp, wind_gust "
             "FROM weather_record "
             "WHERE station_id = %s AND DATE(taken_timestamp) = %s", 
             (station_id, date)

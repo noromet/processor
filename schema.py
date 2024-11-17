@@ -22,7 +22,8 @@ class WeatherRecord:
                  gathererRunId: uuid.uuid4, 
                  cumulativeRain: float,
                  maxTemp: float,
-                 minTemp: float,):
+                 minTemp: float,
+                 windGust: float):
         
         self.id = id
         self.station_id = station_id
@@ -40,6 +41,7 @@ class WeatherRecord:
         self.gathererRunId = gathererRunId
         self.maxTemp = maxTemp
         self.minTemp = minTemp
+        self.windGust = windGust
 
 
 class DailyRecord:
