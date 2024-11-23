@@ -51,17 +51,15 @@ def build_daily_record(records: list[WeatherRecord], date: datetime.datetime) ->
     low_pressure = float(df['pressure'].min())
 
     #wind
-    are_all_max_wind_speed_na = df['max_wind_speed'].isna().all()
-    if are_all_max_wind_speed_na:
-        high_wind_speed = float(df[['wind_speed', 'windGust']].max().max())
-        if pd.isna(high_wind_speed):
-            high_wind_speed = None
-            high_wind_direction = None
-        else:
-            high_wind_direction = float(df.loc[df[['wind_speed', 'windGust']].idxmax().max()]['wind_direction'])
+    wind_columns = ['wind_speed', 'max_wind_speed', 'windGust']
+    max_wind_speed = df[wind_columns].max().max()
+
+    if pd.isna(max_wind_speed):
+        high_wind_speed = None
+        high_wind_direction = None
     else:
-        high_wind_speed = float(df[['max_wind_speed', 'windGust']].max().max())
-        high_wind_direction = float(df.loc[df[['max_wind_speed', 'windGust']].idxmax().max()]['wind_direction'])
+        high_wind_speed = float(max_wind_speed)
+        high_wind_direction = float(df.loc[df[wind_columns].idxmax().max()]['wind_direction'])
 
     #temperature
     are_all_max_temp_na = df['maxTemp'].isna().all()
