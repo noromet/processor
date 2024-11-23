@@ -62,17 +62,12 @@ def build_daily_record(records: list[WeatherRecord], date: datetime.datetime) ->
         high_wind_direction = float(df.loc[df[wind_columns].idxmax().max()]['wind_direction'])
 
     #temperature
-    are_all_max_temp_na = df['maxTemp'].isna().all()
-    are_all_min_temp_na = df['minTemp'].isna().all()
-    if are_all_max_temp_na:
-        high_temperature = float(df['temperature'].max())
-    else:
-        high_temperature = float(df['maxTemp'].max())
+    max_temperature = df[['temperature', 'maxTemp']].max().max()
+    high_temperature = float(max_temperature)
 
-    if are_all_min_temp_na:
-        low_temperature = float(df['temperature'].min())
-    else:
-        low_temperature = float(df['minTemp'].min())
+    # Get the minimum temperature
+    min_temperature = df[['temperature', 'minTemp']].min().min()
+    low_temperature = float(min_temperature)
 
     #rain
     max_cum_rain = float(df['cumulativeRain'].max())
