@@ -66,7 +66,7 @@ def build_daily_record(records: list[WeatherRecord], date: datetime.datetime) ->
         
         #if max_wind_speed does not correspond to a value in wind_speed, we ned to leave high_wind_speed to null
         if df['wind_speed'].max() == max_wind_speed:
-            high_wind_direction = df.loc[df['wind_speed'].idxmax()]['wind_direction']
+            high_wind_direction = float(df.loc[df['wind_speed'].idxmax()]['wind_direction'])
         else:
             high_wind_direction = None
 
