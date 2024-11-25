@@ -47,8 +47,12 @@ def build_daily_record(records: list[WeatherRecord], date: datetime.datetime) ->
     flagged = bool(df['flagged'].any())
 
     #pressure
-    high_pressure = float(df['pressure'].max())
-    low_pressure = float(df['pressure'].min())
+    if not df['pressure'].isnull().all():
+        high_pressure = float(df['pressure'].max())
+        low_pressure = float(df['pressure'].min())
+    else:
+        high_pressure = None
+        low_pressure = None
 
     #wind
     wind_columns = ['wind_speed', 'max_wind_speed', 'windGust']
@@ -59,7 +63,12 @@ def build_daily_record(records: list[WeatherRecord], date: datetime.datetime) ->
         high_wind_direction = None
     else:
         high_wind_speed = float(max_wind_speed)
-        high_wind_direction = float(df.loc[df[wind_columns].idxmax().max()]['wind_direction'])
+        
+        #if max_wind_speed does not correspond to a value in wind_speed, we ned to leave high_wind_speed to null
+        if df['wind_speed'].max() == max_wind_speed:
+            high_wind_direction = df.loc[df['wind_speed'].idxmax()]['wind_direction']
+        else:
+            high_wind_direction = None
 
     #temperature
     max_temperature = df[['temperature', 'maxTemp']].max().max()
