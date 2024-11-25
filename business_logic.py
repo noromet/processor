@@ -63,12 +63,17 @@ def build_daily_record(records: list[WeatherRecord], date: datetime.datetime) ->
         high_wind_direction = None
     else:
         high_wind_speed = float(max_wind_speed)
-        
-        #if max_wind_speed does not correspond to a value in wind_speed, we ned to leave high_wind_speed to null
-        if df['wind_speed'].max() == max_wind_speed:
-            high_wind_direction = float(df.loc[df['wind_speed'].idxmax()]['wind_direction'])
-        else:
+    
+        # Determine the source column for the max wind speed
+        source_column = df[wind_columns].idxmax(axis=1).loc[df[wind_columns].max(axis=1).idxmax()]
+
+        # Retrieve the high wind direction using the source column
+        high_wind_direction = df.loc[df[source_column].idxmax()]['wind_direction']
+
+        if pd.isna(high_wind_direction):
             high_wind_direction = None
+        else:
+            high_wind_direction = float(high_wind_direction)
 
     #temperature
     max_temperature = df[['temperature', 'maxTemp']].max().max()
