@@ -55,29 +55,36 @@ def build_daily_record(records: list[WeatherRecord], date: datetime.datetime) ->
         low_pressure = None
 
     #wind
-    wind_columns = ['wind_speed', 'max_wind_speed', 'windGust']
-    max_wind_speed = df[wind_columns].max().max()
+    max_wind_speed = df[['wind_speed']].max().max()
+    max_wind_gust = df[['windGust']].max().max()
+    max_max_wind_speed = df[['max_wind_speed']].max().max()
 
-    if pd.isna(max_wind_speed):
+    wind_columns = ['wind_speed', 'max_wind_speed', 'windGust']
+    max_global_wind_speed = df[wind_columns].max().max()
+
+    using_column = None
+    if max_wind_speed == max_global_wind_speed:
+        using_column = 'wind_speed'
+    elif max_max_wind_speed == max_global_wind_speed:
+        using_column = 'max_wind_speed'
+    elif max_wind_gust == max_global_wind_speed:
+        using_column = 'windGust'
+    
+    # print("wind_speed:", max_wind_speed, "max_wind_speed:", max_max_wind_speed, "windGust:", max_wind_gust, "max_global_wind_speed:", max_global_wind_speed, "using_column:", using_column)
+
+    if pd.isna(max_global_wind_speed):
         high_wind_speed = None
         high_wind_direction = None
     else:
-        high_wind_speed = float(max_wind_speed)
+        high_wind_speed = float(max_global_wind_speed)
     
-        # Filter out N/A values before determining the source column
-        valid_wind_df = df[wind_columns].dropna(how='all')
-        if not valid_wind_df.empty:
-            source_column = valid_wind_df.idxmax(axis=1).loc[valid_wind_df.max(axis=1).idxmax()]
+        # Retrieve the high wind direction using the source column
+        high_wind_direction = df.loc[df[using_column].idxmax()]['wind_direction']
 
-            # Retrieve the high wind direction using the source column
-            high_wind_direction = df.loc[df[source_column].idxmax()]['wind_direction']
-
-            if pd.isna(high_wind_direction):
-                high_wind_direction = None
-            else:
-                high_wind_direction = float(high_wind_direction)
-        else:
+        if pd.isna(high_wind_direction):
             high_wind_direction = None
+        else:
+            high_wind_direction = float(high_wind_direction)
 
     #temperature
     max_temperature = df[['temperature', 'maxTemp']].max().max()
