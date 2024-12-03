@@ -59,6 +59,9 @@ def validate_args(args):
         args.date = datetime.date.today()
     elif args.yesterday:
         args.date = datetime.date.today() - datetime.timedelta(days=1)
+
+    if not args.date and not args.today and not args.yesterday:
+        raise ValueError("Must specify --date, --today or --yesterday")
 #endregion
 
 # region processing

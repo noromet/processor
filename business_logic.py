@@ -20,7 +20,7 @@ def construct_record(tuple) -> WeatherRecord:
         cumulativeRain=tuple[12],
         maxTemp=tuple[13],
         minTemp=tuple[14],
-        windGust=tuple[15]
+        maxWindGust=tuple[15]
     )
 
 def calculate_flagged(df: pd.DataFrame) -> bool:
@@ -37,10 +37,10 @@ def calculate_pressure(df: pd.DataFrame) -> tuple:
 
 def calculate_wind(df: pd.DataFrame) -> tuple:
     max_wind_speed = df[['wind_speed']].max().max()
-    max_wind_gust = df[['windGust']].max().max()
+    max_wind_gust = df[['maxWindGust']].max().max()
     max_max_wind_speed = df[['max_wind_speed']].max().max()
 
-    wind_columns = ['wind_speed', 'max_wind_speed', 'windGust']
+    wind_columns = ['wind_speed', 'max_wind_speed', 'maxWindGust']
     max_global_wind_speed = df[wind_columns].max().max()
 
     using_column = None
@@ -49,7 +49,7 @@ def calculate_wind(df: pd.DataFrame) -> tuple:
     elif max_max_wind_speed == max_global_wind_speed:
         using_column = 'max_wind_speed'
     elif max_wind_gust == max_global_wind_speed:
-        using_column = 'windGust'
+        using_column = 'maxWindGust'
 
     if pd.isna(max_global_wind_speed):
         high_wind_speed = None
@@ -95,7 +95,7 @@ def build_daily_record(records: list[WeatherRecord], date: datetime.datetime) ->
         'flagged': record.flagged,
         'maxTemp': record.maxTemp,
         'minTemp': record.minTemp,
-        'windGust': record.windGust
+        'maxWindGust': record.maxWindGust
     } for record in records])
 
     flagged = calculate_flagged(df)
