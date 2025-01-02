@@ -70,11 +70,11 @@ class DailyProcessor:
             records = [WeatherRecord(*record) for record in records] # list of WeatherRecord objects
             
             if len(records) == 0 or records is None:
-                print(f"No records retrieved for station {station_id}")
+                print(f"No weather records retrieved for station {station_id}")
                 return
             
             daily_record = build_daily_record(records, self.date)
-            daily_record.cookRunId = self.run_id
+            daily_record.cook_run_id = self.run_id
 
             if not self.dry_run:
                 save_daily_record(daily_record)

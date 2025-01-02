@@ -70,81 +70,23 @@ class MonthlyProcessor:
             records = [DailyRecord(*record) for record in records] # list of WeatherRecord objects
             
             if len(records) == 0 or records is None:
-                print(f"No records retrieved for station {station_id}")
+                print(f"No daily records retrieved for station {station_id}")
                 return
             
-            daily_record = build_monthly_record(records, self.date)
-            daily_record.cookRunId = self.run_id
+            monthly_record = build_monthly_record(records, self.date)
+            monthly_record.cook_run_id = self.run_id
 
             if not self.dry_run:
-                save_monthly_record(daily_record)
-                print_green(f"Daily record saved for station {station_id}")
+                save_monthly_record(monthly_record)
+                print_green(f"Monthly record saved for station {station_id}")
             else:
-                print(json.dumps(daily_record.__dict__, indent=4, sort_keys=True, default=str))
+                print(json.dumps(monthly_record.__dict__, indent=4, sort_keys=True, default=str))
                 print_green(f"Dry run enabled, record not saved for station {station_id}")
 
         except Exception as e:
             print_red(f"Error processing station {station_id}: {e}")
 
         print()
-
-def calculate_flagged(df: pd.DataFrame) -> bool:
-    return bool(df['flagged'].any())
-
-def calculate_pressure(df: pd.DataFrame) -> tuple:
-    if not df['pressure'].isnull().all():
-        high_pressure = float(df['pressure'].max())
-        low_pressure = float(df['pressure'].min())
-    else:
-        high_pressure = None
-        low_pressure = None
-    return high_pressure, low_pressure
-
-def calculate_wind(df: pd.DataFrame) -> tuple:
-    max_wind_speed = df[['wind_speed']].max().max()
-    max_wind_gust = df[['maxWindGust']].max().max()
-    max_max_wind_speed = df[['max_wind_speed']].max().max()
-
-    wind_columns = ['wind_speed', 'max_wind_speed', 'maxWindGust']
-    max_global_wind_speed = df[wind_columns].max().max()
-
-    using_column = None
-    if max_wind_speed == max_global_wind_speed:
-        using_column = 'wind_speed'
-    elif max_max_wind_speed == max_global_wind_speed:
-        using_column = 'max_wind_speed'
-    elif max_wind_gust == max_global_wind_speed:
-        using_column = 'maxWindGust'
-
-    if pd.isna(max_global_wind_speed):
-        high_wind_speed = None
-        high_wind_direction = None
-    else:
-        high_wind_speed = float(max_global_wind_speed)
-        high_wind_direction = df.loc[df[using_column].idxmax()]['wind_direction']
-        if pd.isna(high_wind_direction):
-            high_wind_direction = None
-        else:
-            high_wind_direction = float(high_wind_direction)
-
-    return high_wind_speed, high_wind_direction
-
-def calculate_temperature(df: pd.DataFrame) -> tuple:
-    max_temperature = df[['temperature', 'maxTemp']].max().max()
-    high_temperature = float(max_temperature)
-
-    min_temperature = df[['temperature', 'minTemp']].min().min()
-    low_temperature = float(min_temperature)
-
-    return high_temperature, low_temperature
-
-def calculate_rain(df: pd.DataFrame) -> float:
-    max_cum_rain = float(df['cumulativeRain'].max())
-    if max_cum_rain == 0 or pd.isna(max_cum_rain):
-        total_rain = float(df['rain'].sum())
-    else:
-        total_rain = max_cum_rain
-    return total_rain
 
 def build_monthly_record(records: list[DailyRecord], date: datetime.datetime) -> MonthlyRecord:
     df = pd.DataFrame([{
@@ -167,24 +109,61 @@ def build_monthly_record(records: list[DailyRecord], date: datetime.datetime) ->
         'low_humidity': record.low_humidity
     } for record in records])
 
-    flagged = calculate_flagged(df)
-    high_pressure, low_pressure = calculate_pressure(df)
-    high_wind_speed, high_wind_direction = calculate_wind(df)
-    high_temperature, low_temperature = calculate_temperature(df)
-    total_rain = calculate_rain(df)
+    high_high_temperature, low_low_temperature, avg_avg_temperature, avg_high_temperature, avg_low_temperature = calculate_temperature(df)
+    high_max_wind_gust, avg_max_wind_gust = calculate_wind(df)
+    high_high_pressure, low_low_pressure, avg_pressure = calculate_pressure(df)
+    cumulative_rainfall = calculate_rain(df)
+    high_high_humidity, low_low_humidity, avg_humidity = calculate_humidity(df)
 
     return MonthlyRecord(
         id=str(uuid.uuid4()),
         station_id=records[0].station_id,
         date=date,
-        high_temperature=high_temperature,
-        low_temperature=low_temperature,
-        high_wind_speed=high_wind_speed,
-        high_wind_direction=high_wind_direction,
-        high_pressure=high_pressure,
-        low_pressure=low_pressure,
-        rain=total_rain,
-        flagged=flagged,
-        finished=True,
-        cookRunId=None
+        avg_high_temperature=avg_high_temperature,
+        avg_low_temperature=avg_low_temperature,
+        avg_avg_temperature=avg_avg_temperature,
+        avg_humidity=avg_humidity,
+        avg_max_wind_gust=avg_max_wind_gust,
+        avg_pressure=avg_pressure,
+        high_high_temperature=high_high_temperature,
+        low_low_temperature=low_low_temperature,
+        high_high_humidity=high_high_humidity,
+        low_low_humidity=low_low_humidity,
+        high_max_wind_gust=high_max_wind_gust,
+        high_high_pressure=high_high_pressure,
+        low_low_pressure=low_low_pressure,
+        cumulative_rainfall=cumulative_rainfall,
+        cook_run_id=None
     )
+
+def calculate_temperature(df: pd.DataFrame) -> tuple:
+    high_high_temperature = float(round(df[['high_temperature']].max().max(), 2))
+    low_low_temperature = float(round(df[['low_temperature']].min().min(), 2))
+    avg_avg_temperature = float(round(df[['avg_temperature']].mean().mean(), 2))
+    avg_high_temperature = float(round(df[['high_temperature']].mean().mean(), 2))
+    avg_low_temperature = float(round(df[['low_temperature']].mean().mean(), 2))
+    return high_high_temperature, low_low_temperature, avg_avg_temperature, avg_high_temperature, avg_low_temperature
+
+def calculate_wind(df: pd.DataFrame) -> tuple:
+    high_max_wind_gust = float(round(df[['high_wind_gust']].max().max(), 2))
+    avg_max_wind_gust = float(round(df[['high_wind_gust']].mean().mean(), 2))
+    return high_max_wind_gust, avg_max_wind_gust
+
+def calculate_pressure(df: pd.DataFrame) -> tuple:
+    high_high_pressure = float(round(df[['high_pressure']].max().max(), 2))
+    low_low_pressure = float(round(df[['low_pressure']].min().min(), 2))
+    
+    #get avg from high and low columns
+    avg_pressure = float(round(df[['high_pressure', 'low_pressure']].mean().mean(), 2))
+
+    return high_high_pressure, low_low_pressure, avg_pressure
+
+def calculate_rain(df: pd.DataFrame) -> float:
+    cumulative_rainfall = float(round(df['rain'].sum(), 2))
+    return cumulative_rainfall
+
+def calculate_humidity(df: pd.DataFrame) -> tuple:
+    high_high_humidity = float(round(df[['high_humidity']].max().max()))
+    low_low_humidity = float(round(df[['low_humidity']].min().min()))
+    avg_humidity = float(round(df[['avg_humidity']].mean().mean()))
+    return high_high_humidity, low_low_humidity, avg_humidity

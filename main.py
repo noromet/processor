@@ -94,7 +94,7 @@ def main():
         case "daily":
             processor = DailyProcessor(station_set = station_ids, single_thread = single_thread, date = args.date, dry_run = DRY_RUN)
         case "monthly":
-            processor = MonthlyProcessor(station_set = station_ids, single_thread = single_thread, date = args.date)
+            processor = MonthlyProcessor(station_set = station_ids, single_thread = single_thread, date = args.date, dry_run = DRY_RUN)
             pass
         case "yearly":
             # processor = YearlyProcessor(station_set = station_ids, single_thread = single_thread, date = args.date)

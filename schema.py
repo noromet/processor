@@ -84,7 +84,7 @@ class MonthlyRecord:
                     station_id: uuid.uuid4, 
                     date: datetime.datetime, 
                     avg_high_temperature: float, 
-                    avg_min_temperature: float, 
+                    avg_low_temperature: float, 
                     avg_avg_temperature: float, 
                     avg_humidity: float, 
                     avg_max_wind_gust: float, 
@@ -93,7 +93,7 @@ class MonthlyRecord:
                     low_low_temperature: float, 
                     high_high_humidity: float, 
                     low_low_humidity: float, 
-                    high_max_wind_speed: float, 
+                    high_max_wind_gust: float, 
                     high_high_pressure: float, 
                     low_low_pressure: float, 
                     cumulative_rainfall: float, 
@@ -102,7 +102,7 @@ class MonthlyRecord:
         self.station_id = station_id
         self.date = date
         self.avg_high_temperature = avg_high_temperature
-        self.avg_min_temperature = avg_min_temperature
+        self.avg_low_temperature = avg_low_temperature
         self.avg_avg_temperature = avg_avg_temperature
         self.avg_humidity = avg_humidity
         self.avg_max_wind_gust = avg_max_wind_gust
@@ -111,7 +111,7 @@ class MonthlyRecord:
         self.low_low_temperature = low_low_temperature
         self.high_high_humidity = high_high_humidity
         self.low_low_humidity = low_low_humidity
-        self.high_max_wind_speed = high_max_wind_speed
+        self.high_max_wind_gust = high_max_wind_gust
         self.high_high_pressure = high_high_pressure
         self.low_low_pressure = low_low_pressure
         self.cumulative_rainfall = cumulative_rainfall

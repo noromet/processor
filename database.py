@@ -122,7 +122,6 @@ def save_monthly_record(record: MonthlyRecord) -> None:
 
     with CursorFromConnectionFromPool() as cursor:
         cursor.execute(
-            "INSERT INTO monthly_record (id, station_id, date, high_temperature, low_temperature, high_wind_gust, high_wind_direction, high_pressure, low_pressure, rain, flagged, finished, cook_run_id, avg_temperature, high_humidity, avg_humidity, low_humidity) VALUES (%, %, %, %, %, %, %, %, %, %, %, %, %, %, %, %)",
-            (record.id, record.station_id, record.date, record.high_temperature, record.low_temperature, record.high_wind_gust, record.high_wind_direction, record.high_pressure, record.low_pressure, record.rain, record.flagged, record.finished, record.cookRunId, record.avg_temperature, record.high_humidity, record.avg_humidity, record.low_humidity)
+            "INSERT INTO monthly_record (id, station_id, date, avg_high_temperature, avg_low_temperature, avg_avg_temperature, avg_humidity, avg_max_wind_gust, avg_pressure, high_high_temperature, low_low_temperature, high_high_humidity, low_low_humidity, high_max_wind_gust, high_high_pressure, low_low_pressure, cumulative_rainfall, cook_run_id) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
+            (record.id, record.station_id, record.date, record.avg_high_temperature, record.avg_low_temperature, record.avg_avg_temperature, record.avg_humidity, record.avg_max_wind_gust, record.avg_pressure, record.high_high_temperature, record.low_low_temperature, record.high_high_humidity, record.low_low_humidity, record.high_max_wind_gust, record.high_high_pressure, record.low_low_pressure, record.cumulative_rainfall, record.cook_run_id)
         )
-
