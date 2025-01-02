@@ -6,7 +6,7 @@ from typing import List, Tuple, Optional
 import datetime
 import uuid
 
-from schema import WeatherRecord, DailyRecord
+from schema import DailyRecord, MonthlyRecord
 
 class Database:
     """Database class for managing PostgreSQL connections."""
@@ -36,17 +36,6 @@ class Database:
         """Close all connections in the pool."""
         cls.__connection_pool.closeall()
         
-    @classmethod
-    def save_daily_record(cls, record: DailyRecord) -> None:
-        """Save a daily record to the database."""
-        record.id = str(uuid.uuid4())
-        
-        with CursorFromConnectionFromPool() as cursor:
-            cursor.execute(
-                "INSERT INTO daily_record (id, station_id, date, high_temperature, low_temperature, high_wind_speed, high_wind_direction, high_pressure, low_pressure, rain, flagged, finished, cook_run_id) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
-                (record.id, record.station_id, record.date, record.high_temperature, record.low_temperature, record.high_wind_speed, record.high_wind_direction, record.high_pressure, record.low_pressure, record.rain, record.flagged, record.finished, record.cookRunId)
-            )
-
 
 class CursorFromConnectionFromPool:
     """Context manager for PostgreSQL cursor."""
@@ -85,7 +74,7 @@ def get_single_station(station_id: str) -> Tuple:
         station = cursor.fetchone()
         return station
     
-def get_records_for_station_and_date(station_id: str, date: datetime.date) -> List[Tuple]:
+def get_weather_records_for_station_and_date(station_id: str, date: datetime.date) -> List[Tuple]:
     """Get all weather records for a specific station and date."""
     with CursorFromConnectionFromPool() as cursor:
         cursor.execute(
@@ -94,6 +83,46 @@ def get_records_for_station_and_date(station_id: str, date: datetime.date) -> Li
             "WHERE station_id = %s AND DATE(taken_timestamp) = %s", 
             (station_id, date)
         )
-        stations = cursor.fetchall()
-        return stations
+        records = cursor.fetchall()
+        return records
     
+def get_daily_records_for_station_and_date(station_id: str, date: datetime.date) -> List[Tuple]:
+    """Get all daily records for a specific station and date."""
+
+    #first day of the month
+    date_from = date.replace(day=1)
+    
+    #last day of the month
+    date_to = date.replace(day=28) + datetime.timedelta(days=4)
+    date_to = date_to - datetime.timedelta(days=date_to.day)
+
+    with CursorFromConnectionFromPool() as cursor:
+        cursor.execute(
+            "SELECT id, station_id, date, high_temperature, low_temperature, high_wind_gust, high_wind_direction, high_pressure, low_pressure, rain, flagged, finished, cook_run_id, avg_temperature, high_humidity, avg_humidity, low_humidity "
+            "FROM daily_record "
+            "WHERE station_id = %s AND date >= %s AND date <= %s", 
+            (station_id, date_from, date_to)
+        )
+        records = cursor.fetchall()
+        return records
+    
+def save_daily_record(record: DailyRecord) -> None:
+    """Save a daily record to the database."""
+    record.id = str(uuid.uuid4())
+    
+    with CursorFromConnectionFromPool() as cursor:
+        cursor.execute(
+            "INSERT INTO daily_record (id, station_id, date, high_temperature, low_temperature, high_wind_gust, high_wind_direction, high_pressure, low_pressure, rain, flagged, finished, cook_run_id, avg_temperature, high_humidity, avg_humidity, low_humidity) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
+            (record.id, record.station_id, record.date, record.high_temperature, record.low_temperature, record.high_wind_gust, record.high_wind_direction, record.high_pressure, record.low_pressure, record.rain, record.flagged, record.finished, record.cookRunId, record.avg_temperature, record.high_humidity, record.avg_humidity, record.low_humidity)
+        )
+
+def save_monthly_record(record: MonthlyRecord) -> None:
+    """Save a monthly record to the database."""
+    record.id = str(uuid.uuid4())
+
+    with CursorFromConnectionFromPool() as cursor:
+        cursor.execute(
+            "INSERT INTO monthly_record (id, station_id, date, high_temperature, low_temperature, high_wind_gust, high_wind_direction, high_pressure, low_pressure, rain, flagged, finished, cook_run_id, avg_temperature, high_humidity, avg_humidity, low_humidity) VALUES (%, %, %, %, %, %, %, %, %, %, %, %, %, %, %, %)",
+            (record.id, record.station_id, record.date, record.high_temperature, record.low_temperature, record.high_wind_gust, record.high_wind_direction, record.high_pressure, record.low_pressure, record.rain, record.flagged, record.finished, record.cookRunId, record.avg_temperature, record.high_humidity, record.avg_humidity, record.low_humidity)
+        )
+

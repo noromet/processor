@@ -1,26 +1,21 @@
 import os
 from dotenv import load_dotenv
-import concurrent.futures
-import threading
-import json
 import argparse
 import datetime
 
-from business_logic import build_daily_record, construct_record
-from database import Database, get_all_stations, get_single_station, get_records_for_station_and_date
+from processors.daily_processor import DailyProcessor
+from processors.monthly_processor import MonthlyProcessor
+# from processors.yearly_processor import YearlyProcessor
 
-from uuid import uuid4
+from database import Database, get_all_stations, get_single_station
+
 
 # region definitions
+load_dotenv(verbose=True)
+
 print_red = lambda text: print(f"\033[91m{text}\033[00m")
 print_green = lambda text: print(f"\033[92m{text}\033[00m")
 print_yellow = lambda text: print(f"\033[93m{text}\033[00m")
-    
-load_dotenv(verbose=True)
-DB_URL = os.getenv("DATABASE_CONNECTION_URL")
-MAX_THREADS = int(os.getenv("MAX_THREADS"))
-DRY_RUN = False
-RUN_ID = uuid4().hex
 # endregion
 
 #region argument processing
@@ -29,10 +24,11 @@ def get_args():
     parser.add_argument("--all", action="store_true", help="Cook all stations")
     parser.add_argument("--id", type=str, help="Read a single weather station by id")
     parser.add_argument("--dry-run", action="store_true", help="Perform a dry run")
-    parser.add_argument("--today", action="store_true", help="Process today's data")
-    parser.add_argument("--yesterday", action="store_true", help="Process today's data")
+    parser.add_argument("--today", action="store_true", help="Shorthand to process today's daily data")
+    parser.add_argument("--yesterday", action="store_true", help="Shorthand to process yesterday's daily data")
+    parser.add_argument("--mode", choices=["daily", "monthly", "yearly"], default="daily", help="Processing mode")
     parser.add_argument("--date", type=datetime.date.fromisoformat, help="Date to process, in ISO format")
-    parser.add_argument("--multithread-threshold", type=int, default=-1, help="Threshold for enabling multithreading")
+    parser.add_argument("--single-thread", action="store_true", default=False, help="Force single threaded execution")
     return parser.parse_args()
 
 def validate_args(args):
@@ -42,13 +38,12 @@ def validate_args(args):
     if not args.all and not args.id:
         raise ValueError("Must specify --all or --id")
     
-    if args.multithread_threshold == 0 or args.multithread_threshold < -1: #so, -1 or positive integer are valid
-        raise ValueError("Invalid multithread threshold")
-    
     #date needs to be validated: yesterday or before
     if args.date:
         if args.date > datetime.date.today():
             raise ValueError("Date must be yesterday's or earlier")
+        if not args.mode:
+            raise ValueError("Must specify --mode with --date")
         
     #today and yesterday are mutually exclusive
     if args.today and args.yesterday:
@@ -64,108 +59,53 @@ def validate_args(args):
         raise ValueError("Must specify --date, --today or --yesterday")
 #endregion
 
-# region processing
-def process_station(station: tuple, date: datetime.date): # station is a tuple like id, location
-    print_yellow(f"Processing station {station[0]} ({station[1]})")
-    
-    try:
-        records = get_records_for_station_and_date(station[0], date) # tuples
-        records = [construct_record(record) for record in records] # list of WeatherRecord objects
-        
-        if len(records) == 0 or records is None:
-            print(f"No records retrieved for station {station[0]}")
-            return
-        
-        daily_record = build_daily_record(records, date)
-        daily_record.cookRunId = RUN_ID
-
-        if not DRY_RUN:
-            Database.save_daily_record(daily_record)
-            print_green(f"Daily record saved for station {station[0]}")
-        else:
-            print(json.dumps(daily_record.__dict__, indent=4, sort_keys=True, default=str))
-            print_green(f"Dry run enabled, record not saved for station {station[0]}")
-
-    except Exception as e:
-        print_red(f"Error processing station {station[0]}: {e}")
-
-    print()
-
-def process_chunk(chunk, chunk_number):
-    print(f"Processing chunk {chunk_number} on {threading.current_thread().name}")
-    for station in chunk:
-        process_station(station)
-
-def multithread_processing(stations):
-    chunk_size = len(stations) // MAX_THREADS
-    remainder_size = len(stations) % MAX_THREADS
-    chunks = []
-    for i in range(MAX_THREADS):
-        start = i * chunk_size
-        end = start + chunk_size
-        chunks.append(stations[start:end])
-    for i in range(remainder_size):
-        chunks[i].append(stations[-(i+1)])
-        
-    with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_THREADS) as executor:
-        for i, chunk in enumerate(chunks):
-            executor.submit(process_chunk, chunk, chunk_number=i)
-
-def process_all(multithread_threshold, date):
-    stations = get_all_stations()
-
-    if len(stations) == 0:
-        print_red("No active stations found!")
-        return
-
-    print(f"Processing {len(stations)} stations")
-    
-    if multithread_threshold == -1 or len(stations) < multithread_threshold:
-        for station in stations:
-            process_station(station, date)
-
-    elif len(stations) >= multithread_threshold:
-        multithread_processing(stations)
-
-    else:
-        raise ValueError("Invalid multithread threshold")
-    
-def process_single(station_id, date):
-    station = get_single_station(station_id)
-    if station is None:
-        print_red(f"Station {station_id} not found")
-        return
-    process_station(station, date)
-
-# endregion
-
 # region main
 def main():
-    Database.initialize(DB_URL)
+    db_url = os.getenv("DATABASE_CONNECTION_URL")
+    Database.initialize(db_url)
 
     args = get_args()
     validate_args(args)
 
     global DRY_RUN
     DRY_RUN = args.dry_run
-    multithread_threshold = args.multithread_threshold
-
-    print_yellow(f"Processing data for date {args.date} with run ID {RUN_ID}")
-
     if args.dry_run:
         print_yellow("[Dry run enabled]")
     else:
         print_yellow("[Dry run disabled]")
 
-    if args.id:
-        process_single(args.id, args.date)
+    single_thread = args.single_thread
+    mode = args.mode
 
+
+    station_ids = []
+    if args.id:
+        station_ids = [get_single_station(args.id, )[0]]
     else:
-        process_all(multithread_threshold, args.date)
+        station_ids = [station[0] for station in get_all_stations()]
+
+    if len(station_ids) == 0:
+        print_red("No active stations found!")
+        Database.close_all_connections()
+        return
+
+    processor = None
+    match mode:
+        case "daily":
+            processor = DailyProcessor(station_set = station_ids, single_thread = single_thread, date = args.date, dry_run = DRY_RUN)
+        case "monthly":
+            processor = MonthlyProcessor(station_set = station_ids, single_thread = single_thread, date = args.date)
+            pass
+        case "yearly":
+            # processor = YearlyProcessor(station_set = station_ids, single_thread = single_thread, date = args.date)
+            pass
+        case _:
+            raise ValueError("Invalid mode")
+
+    processor.run()
                 
     Database.close_all_connections()
 
-    print_green(f"Processing complete for run ID {RUN_ID}")
     
 if __name__ == "__main__":
     main()
