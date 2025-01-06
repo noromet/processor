@@ -103,10 +103,10 @@ def calculate_pressure(df: pd.DataFrame) -> tuple:
 
 def calculate_wind(df: pd.DataFrame) -> tuple:
     max_wind_speed = df[['wind_speed']].max().max()
-    max_wind_gust = df[['maxWindGust']].max().max()
+    max_wind_gust = df[['max_wind_gust']].max().max()
     max_max_wind_speed = df[['max_wind_speed']].max().max()
 
-    wind_columns = ['wind_speed', 'max_wind_speed', 'maxWindGust']
+    wind_columns = ['wind_speed', 'max_wind_speed', 'max_wind_gust']
     max_global_wind_speed = df[wind_columns].max().max()
 
     using_column = None
@@ -115,7 +115,7 @@ def calculate_wind(df: pd.DataFrame) -> tuple:
     elif max_max_wind_speed == max_global_wind_speed:
         using_column = 'max_wind_speed'
     elif max_wind_gust == max_global_wind_speed:
-        using_column = 'maxWindGust'
+        using_column = 'max_wind_gust'
 
     if pd.isna(max_global_wind_speed):
         high_wind_speed = None
@@ -131,14 +131,14 @@ def calculate_wind(df: pd.DataFrame) -> tuple:
     return high_wind_speed, high_wind_direction
 
 def calculate_temperature(df: pd.DataFrame) -> tuple:
-    high_temperature = float(df[['temperature', 'maxTemp']].max().max())
-    low_temperature = float(df[['temperature', 'minTemp']].min().min())
+    high_temperature = float(df[['temperature', 'max_temp']].max().max())
+    low_temperature = float(df[['temperature', 'min_temp']].min().min())
     avg_temperature = float(df['temperature'].mean())
 
     return high_temperature, low_temperature, avg_temperature
 
 def calculate_rain(df: pd.DataFrame) -> float:
-    max_cum_rain = float(df['cumulativeRain'].max())
+    max_cum_rain = float(df['cumulative_rain'].max())
     if max_cum_rain == 0 or pd.isna(max_cum_rain):
         total_rain = float(df['rain'].sum())
     else:
@@ -161,14 +161,14 @@ def build_daily_record(records: list[WeatherRecord], date: datetime.datetime) ->
         'max_wind_speed': record.max_wind_speed,
         'wind_direction': record.wind_direction,
         'rain': record.rain,
-        'cumulativeRain': record.cumulativeRain,
+        'cumulative_rain': record.cumulative_rain,
         'humidity': record.humidity,
         'pressure': record.pressure,
         'flagged': record.flagged,
         'taken_timestamp': record.taken_timestamp,
-        'maxTemp': record.maxTemp,
-        'minTemp': record.minTemp,
-        'maxWindGust': record.maxWindGust
+        'max_temp': record.max_temp,
+        'min_temp': record.min_temp,
+        'max_wind_gust': record.max_wind_gust
     } for record in records])
 
     flagged = calculate_flagged(df)

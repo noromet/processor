@@ -14,11 +14,12 @@ class WeatherRecord:
                  humidity: float, 
                  pressure: float, 
                  flagged: bool, 
-                 gathererRunId: uuid.uuid4, 
-                 cumulativeRain: float,
-                 maxTemp: float,
-                 minTemp: float,
-                 maxWindGust: float):
+                 taken_timestamp: datetime.datetime,
+                 gatherer_thread_id: uuid.uuid4, 
+                 cumulative_rain: float,
+                 max_temp: float,
+                 min_temp: float,
+                 max_wind_gust: float):
         
         self.id = id
         self.station_id = station_id
@@ -28,15 +29,15 @@ class WeatherRecord:
         self.max_wind_speed = max_wind_speed
         self.wind_direction = wind_direction
         self.rain = rain
-        self.cumulativeRain = cumulativeRain
+        self.cumulative_rain = cumulative_rain
         self.humidity = humidity
         self.pressure = pressure
         self.flagged = flagged
-        self.taken_timestamp = datetime.datetime.now()
-        self.gathererRunId = gathererRunId
-        self.maxTemp = maxTemp
-        self.minTemp = minTemp
-        self.maxWindGust = maxWindGust
+        self.taken_timestamp = taken_timestamp
+        self.gatherer_thread_id = gatherer_thread_id
+        self.max_temp = max_temp
+        self.min_temp = min_temp
+        self.max_wind_gust = max_wind_gust
 
 
 class DailyRecord:
@@ -97,7 +98,8 @@ class MonthlyRecord:
                     high_high_pressure: float, 
                     low_low_pressure: float, 
                     cumulative_rainfall: float, 
-                    cook_run_id: uuid.uuid4):
+                    cook_run_id: uuid.uuid4,
+                    finished: bool):
         self.id = id
         self.station_id = station_id
         self.date = date
@@ -116,3 +118,4 @@ class MonthlyRecord:
         self.low_low_pressure = low_low_pressure
         self.cumulative_rainfall = cumulative_rainfall
         self.cook_run_id = cook_run_id
+        self.finished = finished
