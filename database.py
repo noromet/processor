@@ -112,7 +112,27 @@ def save_daily_record(record: DailyRecord) -> None:
     
     with CursorFromConnectionFromPool() as cursor:
         cursor.execute(
-            "INSERT INTO daily_record (id, station_id, date, high_temperature, low_temperature, high_wind_gust, high_wind_direction, high_pressure, low_pressure, rain, flagged, finished, cook_run_id, avg_temperature, high_humidity, avg_humidity, low_humidity) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
+            """
+            INSERT INTO daily_record (id, station_id, date, high_temperature, low_temperature, high_wind_gust, high_wind_direction, high_pressure, low_pressure, rain, flagged, finished, cook_run_id, avg_temperature, high_humidity, avg_humidity, low_humidity)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            ON CONFLICT (station_id, date) DO UPDATE SET
+                station_id = EXCLUDED.station_id,
+                date = EXCLUDED.date,
+                high_temperature = EXCLUDED.high_temperature,
+                low_temperature = EXCLUDED.low_temperature,
+                high_wind_gust = EXCLUDED.high_wind_gust,
+                high_wind_direction = EXCLUDED.high_wind_direction,
+                high_pressure = EXCLUDED.high_pressure,
+                low_pressure = EXCLUDED.low_pressure,
+                rain = EXCLUDED.rain,
+                flagged = EXCLUDED.flagged,
+                finished = EXCLUDED.finished,
+                cook_run_id = EXCLUDED.cook_run_id,
+                avg_temperature = EXCLUDED.avg_temperature,
+                high_humidity = EXCLUDED.high_humidity,
+                avg_humidity = EXCLUDED.avg_humidity,
+                low_humidity = EXCLUDED.low_humidity
+            """,
             (record.id, record.station_id, record.date, record.high_temperature, record.low_temperature, record.high_wind_gust, record.high_wind_direction, record.high_pressure, record.low_pressure, record.rain, record.flagged, record.finished, record.cook_run_id, record.avg_temperature, record.high_humidity, record.avg_humidity, record.low_humidity)
         )
 
@@ -122,6 +142,28 @@ def save_monthly_record(record: MonthlyRecord) -> None:
 
     with CursorFromConnectionFromPool() as cursor:
         cursor.execute(
-            "INSERT INTO monthly_record (id, station_id, date, avg_high_temperature, avg_low_temperature, avg_avg_temperature, avg_humidity, avg_max_wind_gust, avg_pressure, high_high_temperature, low_low_temperature, high_high_humidity, low_low_humidity, high_max_wind_gust, high_high_pressure, low_low_pressure, cumulative_rainfall, cook_run_id, finished) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
+            """
+            INSERT INTO monthly_record (id, station_id, date, avg_high_temperature, avg_low_temperature, avg_avg_temperature, avg_humidity, avg_max_wind_gust, avg_pressure, high_high_temperature, low_low_temperature, high_high_humidity, low_low_humidity, high_max_wind_gust, high_high_pressure, low_low_pressure, cumulative_rainfall, cook_run_id, finished)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            ON CONFLICT (station_id, date) DO UPDATE SET
+                station_id = EXCLUDED.station_id,
+                date = EXCLUDED.date,
+                avg_high_temperature = EXCLUDED.avg_high_temperature,
+                avg_low_temperature = EXCLUDED.avg_low_temperature,
+                avg_avg_temperature = EXCLUDED.avg_avg_temperature,
+                avg_humidity = EXCLUDED.avg_humidity,
+                avg_max_wind_gust = EXCLUDED.avg_max_wind_gust,
+                avg_pressure = EXCLUDED.avg_pressure,
+                high_high_temperature = EXCLUDED.high_high_temperature,
+                low_low_temperature = EXCLUDED.low_low_temperature,
+                high_high_humidity = EXCLUDED.high_high_humidity,
+                low_low_humidity = EXCLUDED.low_low_humidity,
+                high_max_wind_gust = EXCLUDED.high_max_wind_gust,
+                high_high_pressure = EXCLUDED.high_high_pressure,
+                low_low_pressure = EXCLUDED.low_low_pressure,
+                cumulative_rainfall = EXCLUDED.cumulative_rainfall,
+                cook_run_id = EXCLUDED.cook_run_id,
+                finished = EXCLUDED.finished
+            """,
             (record.id, record.station_id, record.date, record.avg_high_temperature, record.avg_low_temperature, record.avg_avg_temperature, record.avg_humidity, record.avg_max_wind_gust, record.avg_pressure, record.high_high_temperature, record.low_low_temperature, record.high_high_humidity, record.low_low_humidity, record.high_max_wind_gust, record.high_high_pressure, record.low_low_pressure, record.cumulative_rainfall, record.cook_run_id, record.finished)
         )
