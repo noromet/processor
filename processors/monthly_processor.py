@@ -5,13 +5,10 @@ import threading
 import json
 import pandas as pd
 import uuid
+import logging
 
 from schema import DailyRecord, MonthlyRecord
 from database import save_monthly_record, get_daily_records_for_station_and_date
-
-print_red = lambda text: print(f"\033[91m{text}\033[00m")
-print_green = lambda text: print(f"\033[92m{text}\033[00m")
-print_yellow = lambda text: print(f"\033[93m{text}\033[00m")
 
 class MonthlyProcessor:
     def __init__(self, station_set: list, date: datetime.date, single_thread: bool = False, dry_run: bool = True):
@@ -23,12 +20,12 @@ class MonthlyProcessor:
         self.dry_run = dry_run
 
     def run(self):
-        self.run_id = uuid.uuid4().hex
+        self.run_id = str(uuid.uuid4())
 
-        print_yellow(f"Processing monthly data for date {self.date} with run ID {self.run_id}")
+        logging.info(f"Processing monthly data for date {self.date} with run ID {self.run_id}")
 
         if len(self.station_set) == 0:
-            print_red("No active stations found!")
+            logging.warning("No active stations found!")
             return
         
         if self.single_thread:
@@ -36,7 +33,7 @@ class MonthlyProcessor:
         else:
             self.multithread_processing(self.station_set)
 
-        print_green(f"Processing complete for run ID {self.run_id} for date {self.date}")
+        logging.info(f"Processing complete for run ID {self.run_id} for date {self.date}")
         
     def single_thread_processing(self, stations):
         for station in stations:
@@ -44,7 +41,7 @@ class MonthlyProcessor:
 
     def multithread_processing(self, stations):
         def process_chunk(chunk, chunk_number):
-            print(f"Processing chunk {chunk_number} on {threading.current_thread().name}")
+            logging.debug(f"Processing chunk {chunk_number} on {threading.current_thread().name}")
             for station in chunk:
                 self.process_station(station)
 
@@ -63,14 +60,14 @@ class MonthlyProcessor:
                 executor.submit(process_chunk, chunk, chunk_number=i)
 
     def process_station(self, station_id: str): # station is a tuple like id, location
-        print_yellow(f"Processing station {station_id}")
+        logging.info(f"Processing station {station_id}")
         
         try:
             records = get_daily_records_for_station_and_date(station_id, self.date) # tuples
             records = [DailyRecord(*record) for record in records] # list of WeatherRecord objects
             
             if len(records) == 0 or records is None:
-                print(f"No daily records retrieved for station {station_id}")
+                logging.warning(f"No daily records retrieved for station {station_id}")
                 return
             
             monthly_record = build_monthly_record(records, self.date)
@@ -78,15 +75,14 @@ class MonthlyProcessor:
 
             if not self.dry_run:
                 save_monthly_record(monthly_record)
-                print_green(f"Monthly record saved for station {station_id}")
+                logging.info(f"Monthly record saved for station {station_id}")
             else:
-                print(json.dumps(monthly_record.__dict__, indent=4, sort_keys=True, default=str))
-                print_green(f"Dry run enabled, record not saved for station {station_id}")
+                logging.debug(json.dumps(monthly_record.__dict__, indent=4, sort_keys=True, default=str))
+                logging.info(f"Dry run enabled, record not saved for station {station_id}")
 
         except Exception as e:
-            print_red(f"Error processing station {station_id}: {e}")
+            logging.error(f"Error processing station {station_id}: {e}")
 
-        print()
 
 def build_monthly_record(records: list[DailyRecord], date: datetime.datetime) -> MonthlyRecord:
     df = pd.DataFrame([{
@@ -133,37 +129,57 @@ def build_monthly_record(records: list[DailyRecord], date: datetime.datetime) ->
         high_high_pressure=high_high_pressure,
         low_low_pressure=low_low_pressure,
         cumulative_rainfall=cumulative_rainfall,
-        cook_run_id=None
+        cook_run_id=None,
+        finished=True
     )
 
 def calculate_temperature(df: pd.DataFrame) -> tuple:
-    high_high_temperature = float(round(df[['high_temperature']].max().max(), 2))
-    low_low_temperature = float(round(df[['low_temperature']].min().min(), 2))
-    avg_avg_temperature = float(round(df[['avg_temperature']].mean().mean(), 2))
-    avg_high_temperature = float(round(df[['high_temperature']].mean().mean(), 2))
-    avg_low_temperature = float(round(df[['low_temperature']].mean().mean(), 2))
+    df_high = df.dropna(subset=['high_temperature'])
+    df_low = df.dropna(subset=['low_temperature'])
+    df_avg = df.dropna(subset=['avg_temperature'])
+
+    high_high_temperature = float(round(df_high['high_temperature'].max(), 2)) if not df_high.empty else None
+    low_low_temperature = float(round(df_low['low_temperature'].min(), 2)) if not df_low.empty else None
+    avg_avg_temperature = float(round(df_avg['avg_temperature'].mean(), 2)) if not df_avg.empty else None
+    avg_high_temperature = float(round(df_high['high_temperature'].mean(), 2)) if not df_high.empty else None
+    avg_low_temperature = float(round(df_low['low_temperature'].mean(), 2)) if not df_low.empty else None
+
     return high_high_temperature, low_low_temperature, avg_avg_temperature, avg_high_temperature, avg_low_temperature
 
 def calculate_wind(df: pd.DataFrame) -> tuple:
-    high_max_wind_gust = float(round(df[['high_wind_gust']].max().max(), 2))
-    avg_max_wind_gust = float(round(df[['high_wind_gust']].mean().mean(), 2))
+    df_high = df.dropna(subset=['high_wind_gust'])
+    high_max_wind_gust = float(round(df_high['high_wind_gust'].max(), 2)) if not df_high.empty else None
+    avg_max_wind_gust = float(round(df_high['high_wind_gust'].mean(), 2)) if not df_high.empty else None
+
     return high_max_wind_gust, avg_max_wind_gust
 
 def calculate_pressure(df: pd.DataFrame) -> tuple:
-    high_high_pressure = float(round(df[['high_pressure']].max().max(), 2))
-    low_low_pressure = float(round(df[['low_pressure']].min().min(), 2))
-    
-    #get avg from high and low columns
-    avg_pressure = float(round(df[['high_pressure', 'low_pressure']].mean().mean(), 2))
+    df_high = df.dropna(subset=['high_pressure'])
+    df_low = df.dropna(subset=['low_pressure'])
+
+    high_high_pressure = float(round(df_high['high_pressure'].max(), 2)) if not df_high.empty else None
+    low_low_pressure = float(round(df_low['low_pressure'].min(), 2)) if not df_low.empty else None
+
+    if not df_high.empty and not df_low.empty:
+        avg_pressure = float(round(pd.concat([df_high['high_pressure'], df_low['low_pressure']]).mean(), 2))
+    else:
+        avg_pressure = None
 
     return high_high_pressure, low_low_pressure, avg_pressure
 
 def calculate_rain(df: pd.DataFrame) -> float:
-    cumulative_rainfall = float(round(df['rain'].sum(), 2))
+    df_rain = df.dropna(subset=['rain'])
+    cumulative_rainfall = float(round(df_rain['rain'].sum(), 2)) if not df_rain.empty else None
+
     return cumulative_rainfall
 
 def calculate_humidity(df: pd.DataFrame) -> tuple:
-    high_high_humidity = float(round(df[['high_humidity']].max().max()))
-    low_low_humidity = float(round(df[['low_humidity']].min().min()))
-    avg_humidity = float(round(df[['avg_humidity']].mean().mean()))
+    df_high = df.dropna(subset=['high_humidity'])
+    df_low = df.dropna(subset=['low_humidity'])
+    df_avg = df.dropna(subset=['avg_humidity'])
+
+    high_high_humidity = float(round(df_high['high_humidity'].max(), 2)) if not df_high.empty else None
+    low_low_humidity = float(round(df_low['low_humidity'].min(), 2)) if not df_low.empty else None
+    avg_humidity = float(round(df_avg['avg_humidity'].mean(), 2)) if not df_avg.empty else None
+
     return high_high_humidity, low_low_humidity, avg_humidity

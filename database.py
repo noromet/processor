@@ -78,7 +78,7 @@ def get_weather_records_for_station_and_date(station_id: str, date: datetime.dat
     """Get all weather records for a specific station and date."""
     with CursorFromConnectionFromPool() as cursor:
         cursor.execute(
-            "SELECT id, station_id, source_timestamp, temperature, wind_speed, max_wind_speed, wind_direction, rain, humidity, pressure, flagged, gatherer_thread_id, cumulative_rain, max_temp, min_temp, max_wind_gust "
+            "SELECT id, station_id, source_timestamp, temperature, wind_speed, max_wind_speed, wind_direction, rain, humidity, pressure, flagged, taken_timestamp, gatherer_thread_id, cumulative_rain, max_temp, min_temp, max_wind_gust "
             "FROM weather_record "
             "WHERE station_id = %s AND DATE(taken_timestamp) = %s", 
             (station_id, date)
@@ -113,7 +113,7 @@ def save_daily_record(record: DailyRecord) -> None:
     with CursorFromConnectionFromPool() as cursor:
         cursor.execute(
             "INSERT INTO daily_record (id, station_id, date, high_temperature, low_temperature, high_wind_gust, high_wind_direction, high_pressure, low_pressure, rain, flagged, finished, cook_run_id, avg_temperature, high_humidity, avg_humidity, low_humidity) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
-            (record.id, record.station_id, record.date, record.high_temperature, record.low_temperature, record.high_wind_gust, record.high_wind_direction, record.high_pressure, record.low_pressure, record.rain, record.flagged, record.finished, record.cookRunId, record.avg_temperature, record.high_humidity, record.avg_humidity, record.low_humidity)
+            (record.id, record.station_id, record.date, record.high_temperature, record.low_temperature, record.high_wind_gust, record.high_wind_direction, record.high_pressure, record.low_pressure, record.rain, record.flagged, record.finished, record.cook_run_id, record.avg_temperature, record.high_humidity, record.avg_humidity, record.low_humidity)
         )
 
 def save_monthly_record(record: MonthlyRecord) -> None:
@@ -122,6 +122,6 @@ def save_monthly_record(record: MonthlyRecord) -> None:
 
     with CursorFromConnectionFromPool() as cursor:
         cursor.execute(
-            "INSERT INTO monthly_record (id, station_id, date, avg_high_temperature, avg_low_temperature, avg_avg_temperature, avg_humidity, avg_max_wind_gust, avg_pressure, high_high_temperature, low_low_temperature, high_high_humidity, low_low_humidity, high_max_wind_gust, high_high_pressure, low_low_pressure, cumulative_rainfall, cook_run_id) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
-            (record.id, record.station_id, record.date, record.avg_high_temperature, record.avg_low_temperature, record.avg_avg_temperature, record.avg_humidity, record.avg_max_wind_gust, record.avg_pressure, record.high_high_temperature, record.low_low_temperature, record.high_high_humidity, record.low_low_humidity, record.high_max_wind_gust, record.high_high_pressure, record.low_low_pressure, record.cumulative_rainfall, record.cook_run_id)
+            "INSERT INTO monthly_record (id, station_id, date, avg_high_temperature, avg_low_temperature, avg_avg_temperature, avg_humidity, avg_max_wind_gust, avg_pressure, high_high_temperature, low_low_temperature, high_high_humidity, low_low_humidity, high_max_wind_gust, high_high_pressure, low_low_pressure, cumulative_rainfall, cook_run_id, finished) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
+            (record.id, record.station_id, record.date, record.avg_high_temperature, record.avg_low_temperature, record.avg_avg_temperature, record.avg_humidity, record.avg_max_wind_gust, record.avg_pressure, record.high_high_temperature, record.low_low_temperature, record.high_high_humidity, record.low_low_humidity, record.high_max_wind_gust, record.high_high_pressure, record.low_low_pressure, record.cumulative_rainfall, record.cook_run_id, record.finished)
         )
