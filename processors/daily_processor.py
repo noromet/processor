@@ -180,8 +180,8 @@ def calculate_temperature(df: pd.DataFrame) -> tuple:
     if df.empty:
         return None, None, None
 
-    high_temperature = float(df.fillna(-1000, inplace=True)[['temperature', 'max_temp']].max().max())
-    low_temperature = float(df.fillna(1000, inplace=True)[['temperature', 'min_temp']].min().min())
+    high_temperature = float(df[['temperature', 'max_temp']].max().max())
+    low_temperature = float(df[['temperature', 'min_temp']].min().min())
     avg_temperature = float(df['temperature'].mean())
 
     return high_temperature, low_temperature, avg_temperature
