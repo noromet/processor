@@ -84,7 +84,6 @@ def main():
     single_thread = args.single_thread
     mode = args.mode
 
-
     station_ids = []
     if args.id:
         station_ids = [get_single_station(args.id, )[0]]
