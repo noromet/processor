@@ -58,7 +58,8 @@ class DailyRecord:
                  avg_temperature: float, 
                  high_humidity: float, 
                  avg_humidity: float, 
-                 low_humidity: float):
+                 low_humidity: float,
+                 timezone: str):
         
         self.id = id
         self.station_id = station_id
@@ -77,6 +78,7 @@ class DailyRecord:
         self.high_humidity = high_humidity
         self.avg_humidity = avg_humidity
         self.low_humidity = low_humidity
+        self.timezone = timezone
 
 
 class MonthlyRecord:

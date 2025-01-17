@@ -134,8 +134,8 @@ def save_daily_record(record: DailyRecord) -> None:
     with CursorFromConnectionFromPool() as cursor:
         cursor.execute(
             """
-            INSERT INTO daily_record (id, station_id, date, high_temperature, low_temperature, high_wind_gust, high_wind_direction, high_pressure, low_pressure, rain, flagged, finished, cook_run_id, avg_temperature, high_humidity, avg_humidity, low_humidity)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            INSERT INTO daily_record (id, station_id, date, high_temperature, low_temperature, high_wind_gust, high_wind_direction, high_pressure, low_pressure, rain, flagged, finished, cook_run_id, avg_temperature, high_humidity, avg_humidity, low_humidity, timezone)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             ON CONFLICT (station_id, date) DO UPDATE SET
                 station_id = EXCLUDED.station_id,
                 date = EXCLUDED.date,
@@ -152,9 +152,10 @@ def save_daily_record(record: DailyRecord) -> None:
                 avg_temperature = EXCLUDED.avg_temperature,
                 high_humidity = EXCLUDED.high_humidity,
                 avg_humidity = EXCLUDED.avg_humidity,
-                low_humidity = EXCLUDED.low_humidity
+                low_humidity = EXCLUDED.low_humidity,
+                timezone = EXCLUDED.timezone
             """,
-            (record.id, record.station_id, record.date, record.high_temperature, record.low_temperature, record.high_wind_gust, record.high_wind_direction, record.high_pressure, record.low_pressure, record.rain, record.flagged, record.finished, record.cook_run_id, record.avg_temperature, record.high_humidity, record.avg_humidity, record.low_humidity)
+            (record.id, record.station_id, record.date, record.high_temperature, record.low_temperature, record.high_wind_gust, record.high_wind_direction, record.high_pressure, record.low_pressure, record.rain, record.flagged, record.finished, record.cook_run_id, record.avg_temperature, record.high_humidity, record.avg_humidity, record.low_humidity, record.timezone.zone)
         )
 
 def save_monthly_record(record: MonthlyRecord) -> None:

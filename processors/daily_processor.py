@@ -12,6 +12,8 @@ from database import save_daily_record, get_weather_records_for_station_and_inte
 import pytz
 
 class DailyProcessor:
+    run_id = str(uuid.uuid4()) # class variable
+
     def __init__(self, station_set: list, single_thread: bool = False, interval: tuple = None, timezone: pytz.timezone = None, dry_run: bool = True):
         self.station_set = list(set(station_set))
         self.single_thread = single_thread
@@ -25,9 +27,8 @@ class DailyProcessor:
             self.timezone.localize(datetime.datetime.combine(interval[1], datetime.time.max)).astimezone(pytz.utc)
         )
 
+        
     def run(self):
-        self.run_id = str(uuid.uuid4())
-
         logging.info(f"Processing daily data with run ID {self.run_id}")
         logging.info(f"UTC interval: {self.utc_interval[0]} - {self.utc_interval[1]}")
 
@@ -77,7 +78,7 @@ class DailyProcessor:
                 logging.warning(f"No weather records retrieved for station {station_id}")
                 return
             
-            daily_record = build_daily_record(records, self.utc_interval[0].date())
+            daily_record = build_daily_record(records, self.utc_interval[0].date(), self.timezone)
             daily_record.cook_run_id = self.run_id
 
             if not self.dry_run:
@@ -90,7 +91,7 @@ class DailyProcessor:
         except Exception as e:
             logging.error(f"Error processing station {station_id}: {e}")
 
-def build_daily_record(records: list[WeatherRecord], date: datetime.datetime) -> DailyRecord:
+def build_daily_record(records: list[WeatherRecord], date: datetime.datetime, timezone: str) -> DailyRecord:
     df = pd.DataFrame([{
         'id': record.id,
         'station_id': record.station_id,
@@ -134,7 +135,8 @@ def build_daily_record(records: list[WeatherRecord], date: datetime.datetime) ->
         avg_temperature=avg_temperature,
         high_humidity=high_humidity,
         avg_humidity=avg_humidity,
-        low_humidity=low_humidity
+        low_humidity=low_humidity,
+        timezone=timezone
     )
 
 def calculate_flagged(df: pd.DataFrame) -> bool:
