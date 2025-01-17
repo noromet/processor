@@ -8,21 +8,28 @@ import uuid
 import logging
 
 from schema import WeatherRecord, DailyRecord
-from database import save_daily_record, get_weather_records_for_station_and_date
+from database import save_daily_record, get_weather_records_for_station_and_interval
+import pytz
 
 class DailyProcessor:
-    def __init__(self, station_set: list, date: datetime.date, single_thread: bool = False, dry_run: bool = True):
+    def __init__(self, station_set: list, single_thread: bool = False, interval: tuple = None, timezone: pytz.timezone = None, dry_run: bool = True):
         self.station_set = list(set(station_set))
         self.single_thread = single_thread
-        self.date = date
-
         self.max_threads = int(os.getenv("MAX_THREADS", 4))
         self.dry_run = dry_run
+        self.interval = interval
+        self.timezone = timezone
+
+        self.utc_interval = (
+            self.timezone.localize(datetime.datetime.combine(interval[0], datetime.time.min)).astimezone(pytz.utc),
+            self.timezone.localize(datetime.datetime.combine(interval[1], datetime.time.max)).astimezone(pytz.utc)
+        )
 
     def run(self):
         self.run_id = str(uuid.uuid4())
 
-        logging.info(f"Processing daily data for date {self.date} with run ID {self.run_id}")
+        logging.info(f"Processing daily data with run ID {self.run_id}")
+        logging.info(f"UTC interval: {self.utc_interval[0]} - {self.utc_interval[1]}")
 
         if len(self.station_set) == 0:
             logging.warning("No active stations found!")
@@ -33,7 +40,7 @@ class DailyProcessor:
         else:
             self.multithread_processing(self.station_set)
 
-        logging.info(f"Processing complete for run ID {self.run_id} for date {self.date}")
+        logging.info(f"Processing complete for run ID {self.run_id} for date {self.interval}")
         
     def single_thread_processing(self, stations):
         for station in stations:
@@ -63,14 +70,14 @@ class DailyProcessor:
         logging.info(f"Processing station {station_id}")
         
         try:
-            records = get_weather_records_for_station_and_date(station_id, self.date) # tuples
+            records = get_weather_records_for_station_and_interval(station_id, self.utc_interval[0], self.utc_interval[1]) # tuples
             records = [WeatherRecord(*record) for record in records] # list of WeatherRecord objects
             
             if len(records) == 0 or records is None:
                 logging.warning(f"No weather records retrieved for station {station_id}")
                 return
             
-            daily_record = build_daily_record(records, self.date)
+            daily_record = build_daily_record(records, self.utc_interval[0].date())
             daily_record.cook_run_id = self.run_id
 
             if not self.dry_run:

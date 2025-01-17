@@ -1,9 +1,9 @@
 import os
 from dotenv import load_dotenv
 import argparse
-import datetime
+from datetime import datetime, timedelta
 import time
-
+import json
 from log import config_logger
 import logging
 
@@ -11,7 +11,8 @@ from processors.daily_processor import DailyProcessor
 from processors.monthly_processor import MonthlyProcessor
 # from processors.yearly_processor import YearlyProcessor
 
-from database import Database, get_all_stations, get_single_station
+from database import Database, get_all_stations, get_single_station, get_present_timezones
+import pytz
 
 
 # region definitions
@@ -24,10 +25,7 @@ def get_args():
     parser.add_argument("--all", action="store_true", help="Cook all stations")
     parser.add_argument("--id", type=str, help="Read a single weather station by id")
     parser.add_argument("--dry-run", action="store_true", help="Perform a dry run")
-    parser.add_argument("--today", action="store_true", help="Shorthand to process today's daily data")
-    parser.add_argument("--yesterday", action="store_true", help="Shorthand to process yesterday's daily data")
-    parser.add_argument("--mode", choices=["daily", "monthly", "yearly", "auto"], default="daily", help="Processing mode")
-    parser.add_argument("--date", type=datetime.date.fromisoformat, help="Date to process, in ISO format")
+    parser.add_argument("--mode", choices=["daily", "monthly", "yearly"], default="daily", help="Processing mode")
     parser.add_argument("--single-thread", action="store_true", default=False, help="Force single threaded execution")
     return parser.parse_args()
 
@@ -37,26 +35,6 @@ def validate_args(args):
     
     if not args.all and not args.id:
         raise ValueError("Must specify --all or --id")
-    
-    #date needs to be validated: yesterday or before
-    if args.date:
-        if args.date > datetime.date.today():
-            raise ValueError("Date must be yesterday's or earlier")
-        if not args.mode:
-            raise ValueError("Must specify --mode with --date")
-        
-    #today and yesterday are mutually exclusive
-    if args.today and args.yesterday:
-        raise ValueError("Cannot specify both --today and --yesterday")
-    
-    #either of the previous overrides date
-    if args.today:
-        args.date = datetime.date.today()
-    elif args.yesterday:
-        args.date = datetime.date.today() - datetime.timedelta(days=1)
-
-    if not args.date and not args.today and not args.yesterday and args.mode != "auto":
-        raise ValueError("Must specify --date, --today or --yesterday")
     
     if args.mode == "yearly":
         raise ValueError("Yearly mode not implemented")
@@ -84,55 +62,94 @@ def main():
     single_thread = args.single_thread
     mode = args.mode
 
-    station_ids = []
+    stations = []
     if args.id:
-        station_ids = [get_single_station(args.id, )[0]]
+        stations = get_single_station(args.id, )
     else:
-        station_ids = [station[0] for station in get_all_stations()]
+        stations = get_all_stations()
 
-    if len(station_ids) == 0:
+    if len(stations) == 0:
         logging.error("No active stations found!")
         Database.close_all_connections()
         return
     
-    today = datetime.datetime.now().date()
-    yesterday = today - datetime.timedelta(days=1)
 
-    logging.info(f"Processing mode: {mode}. Timestamp: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    timezones = [pytz.timezone(tzname) for tzname in get_present_timezones()]
 
-    processors = []
-    match mode:
-        case "daily":
-            processors.append(DailyProcessor(station_set = station_ids, single_thread = single_thread, date = args.date, dry_run = DRY_RUN))
-        case "monthly":
-            processors.append(MonthlyProcessor(station_set = station_ids, single_thread = single_thread, date = args.date, dry_run = DRY_RUN))
-            pass
-        case "yearly":
-            # processor.append(YearlyProcessor(station_set = station_ids, single_thread = single_thread, date = args.date))
-            pass
-        case "auto":
-            # daily runs every day for yesterday's data
-            # monthly runs on the first day of the month, for last month's data
-            # yearly runs on the first day of the year, for last year's data, but not yet implemented
+    # calculate all 00:00-23:59 intervals (full days) that have ended in the past 24 hours for each timezone
+    now_utc = datetime.now(pytz.utc)
+    past_24_hours = now_utc - timedelta(days=1)
 
-            processors.append(DailyProcessor(station_set = station_ids, single_thread = single_thread, date = yesterday, dry_run = DRY_RUN))
+    if mode == "daily":
+        full_days_intervals = {}
 
-            if today.day == 6:
-                processors.append(MonthlyProcessor(station_set = station_ids, single_thread = single_thread, date = yesterday, dry_run = DRY_RUN))
+        for tz in timezones:
+            now_tz = now_utc.astimezone(tz)
+            past_24_hours_tz = past_24_hours.astimezone(tz)
+            
+            # Calculate the start and end of the full day intervals
+            start_of_day = tz.localize(datetime(past_24_hours_tz.year, past_24_hours_tz.month, past_24_hours_tz.day))
+            end_of_day = start_of_day + timedelta(days=1) - timedelta(seconds=1)
+            
+            if end_of_day < now_tz:
+                full_days_intervals[tz] = (start_of_day, end_of_day)
+        # full_days_intervals now contains the intervals for each timezone
 
-            # if now.month == 1 and now.day == 1:
-            #     processors.append(YearlyProcessor(station_set = station_ids, single_thread = single_thread, date = yesterday))
+        processors = []
+        for tz, interval in full_days_intervals.items():
+            logging.info(f"Working with timezone: {tz}")
+            logging.info(f"Processing mode: {mode}. Current timestamp in timezone: {datetime.now(tz=tz).strftime('%Y-%m-%d %H:%M:%S %z')}")
 
-        case _:
-            raise ValueError("Invalid mode")
+            stations_for_tz = [station for station in stations if station[2] == tz.zone]
+
+            if len(stations_for_tz) == 0:
+                logging.error(f"Logic error: no stations in timezone {tz}")
+                continue
+
+            station_ids = [station[0] for station in stations_for_tz]
+
+            processors.append(DailyProcessor(station_set = station_ids, single_thread = single_thread, interval = interval, timezone = tz, dry_run = DRY_RUN))
+
+    elif mode == "monthly":
+        full_months_intervals = {}
+
+        for tz in timezones:
+            now_tz = now_utc.astimezone(tz)
+            past_24_hours_tz = past_24_hours.astimezone(tz)
+
+            # Calculate the start and end of the full month intervals
+            start_of_month = tz.localize(datetime(past_24_hours_tz.year, past_24_hours_tz.month, 1))
+            end_of_month = start_of_month + timedelta(days=32) - timedelta(seconds=1)
+            
+            if end_of_month < now_tz:
+                full_months_intervals[tz] = (start_of_month, end_of_month)
+
+        processors = []
+        for tz, interval in full_months_intervals.items():
+            logging.info(f"Working with timezone: {tz}")
+            logging.info(f"Processing mode: {mode}. Current timestamp in timezone: {datetime.now(tz=tz).strftime('%Y-%m-%d %H:%M:%S %z')}")
+
+            stations_for_tz = [station for station in stations if station[2] == tz.zone]
+
+            if len(stations_for_tz) == 0:
+                logging.error(f"Logic error: no stations in timezone {tz}")
+                continue
+
+            station_ids = [station[0] for station in stations_for_tz]
+
+            raise NotImplementedError("MonthlyProcessor not implemented yet. Needs testing.")
+            # processors.append(MonthlyProcessor(station_set = station_ids, single_thread = single_thread, interval = interval, timezone = tz, dry_run = DRY_RUN))
+
+    else:
+        raise ValueError("Invalid mode")
 
     for i, processor in enumerate(processors):
         logging.info(f"Running {processor.__class__.__name__} for {len(processor.station_set)} stations")
         processor.run()
 
         if i < len(processors) - 1:
-            logging.info(f"Finished {processor.__class__.__name__}. Sleeping for 5 seconds.")
-            time.sleep(5)
+            logging.info(f"Finished {processor.__class__.__name__}. Sleeping for 2 seconds.")
+            time.sleep(2)
         else:
             logging.info(f"Finished {processor.__class__.__name__}")
 

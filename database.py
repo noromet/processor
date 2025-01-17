@@ -3,6 +3,7 @@ from psycopg2 import pool
 from psycopg2.extensions import connection as _connection
 from psycopg2.extensions import cursor as _cursor
 from typing import List, Tuple, Optional
+import logging
 import datetime
 import uuid
 
@@ -35,7 +36,7 @@ class Database:
     def close_all_connections(cls) -> None:
         """Close all connections in the pool."""
         cls.__connection_pool.closeall()
-        
+
 
 class CursorFromConnectionFromPool:
     """Context manager for PostgreSQL cursor."""
@@ -63,19 +64,22 @@ class CursorFromConnectionFromPool:
 def get_all_stations() -> List[Tuple]:
     """Get all active weather stations."""
     with CursorFromConnectionFromPool() as cursor:
-        cursor.execute("SELECT id, location FROM weather_station WHERE status = 'active'")
+        cursor.execute("SELECT id, location, local_timezone FROM weather_station WHERE status = 'active'")
         stations = cursor.fetchall()
         return stations
     
 def get_single_station(station_id: str) -> Tuple:
     """Get a single weather station by ID."""
     with CursorFromConnectionFromPool() as cursor:
-        cursor.execute("SELECT id, location FROM weather_station WHERE id = %s AND status = 'active'", (station_id,))
+        cursor.execute("SELECT id, location, local_timezone FROM weather_station WHERE id = %s AND status = 'active'", (station_id,))
         station = cursor.fetchone()
         return station
     
+
 def get_weather_records_for_station_and_date(station_id: str, date: datetime.date) -> List[Tuple]:
     """Get all weather records for a specific station and date."""
+
+    logging.warning("This function is deprecated. Use get_daily_records_for_station_and_interval instead.")
     with CursorFromConnectionFromPool() as cursor:
         cursor.execute(
             "SELECT id, station_id, source_timestamp, temperature, wind_speed, max_wind_speed, wind_direction, rain, humidity, pressure, flagged, taken_timestamp, gatherer_thread_id, cumulative_rain, max_temp, min_temp, max_wind_gust "
@@ -84,6 +88,23 @@ def get_weather_records_for_station_and_date(station_id: str, date: datetime.dat
             (station_id, date)
         )
         records = cursor.fetchall()
+        return records
+    
+def get_weather_records_for_station_and_interval(station_id: str, date_from: datetime.datetime, date_to: datetime.datetime) -> List[Tuple]:
+    #assert both datetimes have the same timezone and tzinfo
+    assert date_from.tzinfo == date_to.tzinfo
+    assert date_from.tzinfo is not None
+
+    query = """
+        SELECT id, station_id, source_timestamp, temperature, wind_speed, max_wind_speed, wind_direction, rain, humidity, pressure, flagged, taken_timestamp, gatherer_thread_id, cumulative_rain, max_temp, min_temp, max_wind_gust
+        FROM weather_record
+        WHERE station_id = %s AND source_timestamp >= %s AND source_timestamp <= %s
+    """
+
+    with CursorFromConnectionFromPool() as cursor:
+        cursor.execute(query, (station_id, date_from, date_to))
+        records = cursor.fetchall()
+
         return records
     
 def get_daily_records_for_station_and_date(station_id: str, date: datetime.date) -> List[Tuple]:
@@ -167,3 +188,12 @@ def save_monthly_record(record: MonthlyRecord) -> None:
             """,
             (record.id, record.station_id, record.date, record.avg_high_temperature, record.avg_low_temperature, record.avg_avg_temperature, record.avg_humidity, record.avg_max_wind_gust, record.avg_pressure, record.high_high_temperature, record.low_low_temperature, record.high_high_humidity, record.low_low_humidity, record.high_max_wind_gust, record.high_high_pressure, record.low_low_pressure, record.cumulative_rainfall, record.cook_run_id, record.finished)
         )
+
+def get_present_timezones() -> List[str]:
+    """Get all unique timezones from the weather stations."""
+    with CursorFromConnectionFromPool() as cursor:
+        cursor.execute("SELECT DISTINCT local_timezone FROM weather_station WHERE status = 'active'")
+
+        timezones = [timezone[0] for timezone in cursor.fetchall()]
+
+        return timezones
