@@ -27,6 +27,7 @@ def get_args():
     parser.add_argument("--dry-run", action="store_true", help="Perform a dry run")
     parser.add_argument("--mode", choices=["daily", "monthly", "yearly"], default="daily", help="Processing mode")
     parser.add_argument("--single-thread", action="store_true", default=False, help="Force single threaded execution")
+    parser.add_argument("--pretend-its-date", type=str, help="Pretend it's a specific date in the past. Iso format.")
     return parser.parse_args()
 
 def validate_args(args):
@@ -62,6 +63,14 @@ def main():
     single_thread = args.single_thread
     mode = args.mode
 
+    if args.pretend_its_date is None:
+        now = datetime.now(pytz.utc)    
+    else:
+        now = datetime.fromisoformat(args.pretend_its_date)
+        now = now.replace(hour=12, minute=0, second=0, microsecond=0, tzinfo=pytz.utc)
+
+    print("NOW:", now)
+
     stations = []
     if args.id:
         stations = [get_single_station(args.id, )]
@@ -77,14 +86,13 @@ def main():
     timezones = [pytz.timezone(tzname) for tzname in get_present_timezones()]
 
     # calculate all 00:00-23:59 intervals (full days) that have ended in the past 24 hours for each timezone
-    now_utc = datetime.now(pytz.utc)
-    past_24_hours = now_utc - timedelta(days=1)
+    past_24_hours = now - timedelta(days=1)
 
     if mode == "daily":
         full_days_intervals = {}
 
         for tz in timezones:
-            now_tz = now_utc.astimezone(tz)
+            now_tz = now.astimezone(tz)
             past_24_hours_tz = past_24_hours.astimezone(tz)
             
             # Calculate the start and end of the full day intervals
