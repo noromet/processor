@@ -14,13 +14,14 @@ import pytz
 class DailyProcessor:
     run_id = str(uuid.uuid4()) # class variable
 
-    def __init__(self, station_set: list, single_thread: bool = False, interval: tuple = None, timezone: pytz.timezone = None, dry_run: bool = True):
+    def __init__(self, station_set: list, single_thread: bool = False, interval: tuple = None, timezone: pytz.timezone = None, date: datetime.date = None, dry_run: bool = True):
         self.station_set = list(set(station_set))
         self.single_thread = single_thread
         self.max_threads = int(os.getenv("MAX_THREADS", 4))
         self.dry_run = dry_run
         self.interval = interval
         self.timezone = timezone
+        self.date = date
 
         self.utc_interval = (
             self.timezone.localize(datetime.datetime.combine(interval[0], datetime.time.min)).astimezone(pytz.utc),
@@ -36,6 +37,7 @@ class DailyProcessor:
             logging.warning("No active stations found!")
             return
         
+
         if self.single_thread:
             self.single_thread_processing(self.station_set)
         else:
@@ -78,8 +80,9 @@ class DailyProcessor:
                 logging.warning(f"No weather records retrieved for station {station_id}")
                 return
             
-            daily_record = build_daily_record(records, self.utc_interval[0].date(), self.timezone)
+            daily_record = build_daily_record(records, self.date, self.timezone)
             daily_record.cook_run_id = self.run_id
+
 
             if not self.dry_run:
                 save_daily_record(daily_record)

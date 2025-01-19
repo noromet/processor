@@ -64,7 +64,7 @@ def main():
 
     stations = []
     if args.id:
-        stations = get_single_station(args.id, )
+        stations = [get_single_station(args.id, )]
     else:
         stations = get_all_stations()
 
@@ -95,10 +95,16 @@ def main():
                 full_days_intervals[tz] = (start_of_day, end_of_day)
         # full_days_intervals now contains the intervals for each timezone
 
+        if len(full_days_intervals) == 0:
+            logging.error("Logic error: no full days found")
+            Database.close_all_connections()
+            return
+
         processors = []
         for tz, interval in full_days_intervals.items():
-            logging.info(f"Working with timezone: {tz}")
-            logging.info(f"Processing mode: {mode}. Current timestamp in timezone: {datetime.now(tz=tz).strftime('%Y-%m-%d %H:%M:%S %z')}")
+            date_on_tz = start_of_day.astimezone(tz).date()
+            logging.info(f"Working with timezone: {tz}. Interval: {interval}. Date: {date_on_tz}")
+            logging.info(f"Processing mode: {mode}.")
 
             stations_for_tz = [station for station in stations if station[2] == tz.zone]
 
@@ -108,7 +114,7 @@ def main():
 
             station_ids = [station[0] for station in stations_for_tz]
 
-            processors.append(DailyProcessor(station_set = station_ids, single_thread = single_thread, interval = interval, timezone = tz, dry_run = DRY_RUN))
+            processors.append(DailyProcessor(station_set = station_ids, single_thread = single_thread, interval = interval, timezone = tz, dry_run = DRY_RUN, date= date_on_tz))
 
     elif mode == "monthly":
         full_months_intervals = {}
