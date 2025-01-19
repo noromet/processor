@@ -188,12 +188,19 @@ def calculate_wind(df: pd.DataFrame) -> tuple:
         return high_wind_speed, high_wind_direction
 
 def calculate_temperature(df: pd.DataFrame) -> tuple:
-    df = df.dropna(subset=['temperature', 'max_temp', 'min_temp'])
-    if df.empty:
-        return None, None, None
+    # Calculate high temperature
+    if 'max_temp' in df.columns and df['max_temp'].notna().any():
+        high_temperature_maxs = float(df['max_temp'].max())
+        high_temperature_temps = float(df['temperature'].max())
+        high_temperature = max(high_temperature_maxs, high_temperature_temps)
 
-    high_temperature = float(df[['temperature', 'max_temp']].max().max())
-    low_temperature = float(df[['temperature', 'min_temp']].min().min())
+    # Calculate low temperature
+    if 'min_temp' in df.columns and df['min_temp'].notna().any():
+        low_temperature_mins = float(df['min_temp'].min())
+        low_temperature_temps = float(df['temperature'].min())
+        low_temperature = min(low_temperature_mins, low_temperature_temps)
+
+    # Calculate average temperature
     avg_temperature = float(df['temperature'].mean())
 
     return high_temperature, low_temperature, avg_temperature
