@@ -189,20 +189,24 @@ def calculate_wind(df: pd.DataFrame) -> tuple:
 
 def calculate_temperature(df: pd.DataFrame) -> tuple:
     # Calculate high temperature
-    if 'max_temp' in df.columns and df['max_temp'].notna().any():
-        high_temperature_maxs = float(df['max_temp'].max())
-        high_temperature_temps = float(df['temperature'].max())
-        high_temperature = max(high_temperature_maxs, high_temperature_temps)
+    high_temperature_maxs = float(df['max_temp'].max())
+    high_temperature_temps = float(df['temperature'].max())
+    if pd.isna(high_temperature_maxs):
+        high_temperature = high_temperature_temps
+    elif pd.isna(high_temperature_temps):
+        high_temperature = high_temperature_maxs
     else:
-        high_temperature = float(df['temperature'].max())
+        high_temperature = max(high_temperature_maxs, high_temperature_temps)
 
     # Calculate low temperature
-    if 'min_temp' in df.columns and df['min_temp'].notna().any():
-        low_temperature_mins = float(df['min_temp'].min())
-        low_temperature_temps = float(df['temperature'].min())
-        low_temperature = min(low_temperature_mins, low_temperature_temps)
+    low_temperature_mins = float(df['min_temp'].min())
+    low_temperature_temps = float(df['temperature'].min())
+    if pd.isna(low_temperature_mins):
+        low_temperature = low_temperature_temps
+    elif pd.isna(low_temperature_temps):
+        low_temperature = low_temperature_mins
     else:
-        low_temperature = float(df['temperature'].min())
+        low_temperature = min(low_temperature_mins, low_temperature_temps)
 
     # Calculate average temperature
     avg_temperature = float(df['temperature'].mean())
