@@ -193,12 +193,16 @@ def calculate_temperature(df: pd.DataFrame) -> tuple:
         high_temperature_maxs = float(df['max_temp'].max())
         high_temperature_temps = float(df['temperature'].max())
         high_temperature = max(high_temperature_maxs, high_temperature_temps)
+    else:
+        high_temperature = float(df['temperature'].max())
 
     # Calculate low temperature
     if 'min_temp' in df.columns and df['min_temp'].notna().any():
         low_temperature_mins = float(df['min_temp'].min())
         low_temperature_temps = float(df['temperature'].min())
         low_temperature = min(low_temperature_mins, low_temperature_temps)
+    else:
+        low_temperature = float(df['temperature'].min())
 
     # Calculate average temperature
     avg_temperature = float(df['temperature'].mean())
