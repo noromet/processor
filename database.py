@@ -135,7 +135,11 @@ def save_daily_record(record: DailyRecord) -> None:
         cursor.execute(
             """
             INSERT INTO daily_record (id, station_id, date, high_temperature, low_temperature, high_wind_gust, high_wind_direction, high_pressure, low_pressure, rain, flagged, finished, cook_run_id, avg_temperature, high_humidity, avg_humidity, low_humidity, timezone)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            SELECT %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+            WHERE NOT EXISTS (
+                SELECT 1 FROM daily_record
+                WHERE station_id = %s AND date = %s AND was_manually_edited = TRUE
+            )
             ON CONFLICT (station_id, date) DO UPDATE SET
                 station_id = EXCLUDED.station_id,
                 date = EXCLUDED.date,
@@ -155,9 +159,8 @@ def save_daily_record(record: DailyRecord) -> None:
                 low_humidity = EXCLUDED.low_humidity,
                 timezone = EXCLUDED.timezone
             """,
-            (record.id, record.station_id, record.date, record.high_temperature, record.low_temperature, record.high_wind_gust, record.high_wind_direction, record.high_pressure, record.low_pressure, record.rain, record.flagged, record.finished, record.cook_run_id, record.avg_temperature, record.high_humidity, record.avg_humidity, record.low_humidity, record.timezone.zone)
+            (record.id, record.station_id, record.date, record.high_temperature, record.low_temperature, record.high_wind_gust, record.high_wind_direction, record.high_pressure, record.low_pressure, record.rain, record.flagged, record.finished, record.cook_run_id, record.avg_temperature, record.high_humidity, record.avg_humidity, record.low_humidity, record.timezone.zone, record.station_id, record.date)
         )
-
 def save_monthly_record(record: MonthlyRecord) -> None:
     """Save a monthly record to the database."""
     record.id = str(uuid.uuid4())

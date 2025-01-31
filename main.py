@@ -128,7 +128,7 @@ def main():
         full_months_intervals = {}
 
         for tz in timezones:
-            now_tz = now_utc.astimezone(tz)
+            now_tz = now.astimezone(tz)
             past_24_hours_tz = past_24_hours.astimezone(tz)
 
             # Calculate the start and end of the full month intervals
