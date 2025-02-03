@@ -190,11 +190,11 @@ def main():
         logging.info(
             f"Processing mode: {mode}. Current timestamp in timezone: {datetime.now(tz=tz).strftime('%Y-%m-%d %H:%M:%S %z')}"
         )
+        logging.info(
+            f"Working with hardcoded timezone: {tz}. Interval: {interval}. Date: {start_of_month.date()}"
+        )
 
         station_ids = [station[0] for station in stations]
-
-        print("STATION IDS:", station_ids)
-        print("INTERVAL:", interval)
 
         processors.append(
             MonthlyProcessor(

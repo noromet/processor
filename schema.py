@@ -1,26 +1,29 @@
 import datetime
 import uuid
-        
+
+
 class WeatherRecord:
-    def __init__(self, 
-                 id: uuid.uuid4, 
-                 station_id: uuid.uuid4, 
-                 source_timestamp: datetime.datetime, 
-                 temperature: float, 
-                 wind_speed: float, 
-                 max_wind_speed: float, 
-                 wind_direction: float, 
-                 rain: float, 
-                 humidity: float, 
-                 pressure: float, 
-                 flagged: bool, 
-                 taken_timestamp: datetime.datetime,
-                 gatherer_thread_id: uuid.uuid4, 
-                 cumulative_rain: float,
-                 max_temp: float,
-                 min_temp: float,
-                 max_wind_gust: float):
-        
+    def __init__(
+        self,
+        id: uuid.uuid4,
+        station_id: uuid.uuid4,
+        source_timestamp: datetime.datetime,
+        temperature: float,
+        wind_speed: float,
+        max_wind_speed: float,
+        wind_direction: float,
+        rain: float,
+        humidity: float,
+        pressure: float,
+        flagged: bool,
+        taken_timestamp: datetime.datetime,
+        gatherer_thread_id: uuid.uuid4,
+        cumulative_rain: float,
+        max_temp: float,
+        min_temp: float,
+        max_wind_gust: float,
+    ):
+
         self.id = id
         self.station_id = station_id
         self.source_timestamp = source_timestamp
@@ -41,26 +44,28 @@ class WeatherRecord:
 
 
 class DailyRecord:
-    def __init__(self, 
-                 id: uuid.uuid4, 
-                 station_id: uuid.uuid4, 
-                 date: datetime.date, 
-                 high_temperature: float, 
-                 low_temperature: float, 
-                 high_wind_gust: float, 
-                 high_wind_direction: float, 
-                 high_pressure: float, 
-                 low_pressure: float, 
-                 rain: float, 
-                 flagged: bool, 
-                 finished: bool, 
-                 cook_run_id: uuid.uuid4, 
-                 avg_temperature: float, 
-                 high_humidity: float, 
-                 avg_humidity: float, 
-                 low_humidity: float,
-                 timezone: str):
-        
+    def __init__(
+        self,
+        id: uuid.uuid4,
+        station_id: uuid.uuid4,
+        date: datetime.date,
+        high_temperature: float,
+        low_temperature: float,
+        high_wind_gust: float,
+        high_wind_direction: float,
+        high_pressure: float,
+        low_pressure: float,
+        rain: float,
+        flagged: bool,
+        finished: bool,
+        cook_run_id: uuid.uuid4,
+        avg_temperature: float,
+        high_humidity: float,
+        avg_humidity: float,
+        low_humidity: float,
+        timezone: str,
+    ):
+
         self.id = id
         self.station_id = station_id
         self.date = date
@@ -82,26 +87,28 @@ class DailyRecord:
 
 
 class MonthlyRecord:
-    def __init__(self, 
-                    id: uuid.uuid4, 
-                    station_id: uuid.uuid4, 
-                    date: datetime.datetime, 
-                    avg_high_temperature: float, 
-                    avg_low_temperature: float, 
-                    avg_avg_temperature: float, 
-                    avg_humidity: float, 
-                    avg_max_wind_gust: float, 
-                    avg_pressure: float, 
-                    high_high_temperature: float, 
-                    low_low_temperature: float, 
-                    high_high_humidity: float, 
-                    low_low_humidity: float, 
-                    high_max_wind_gust: float, 
-                    high_high_pressure: float, 
-                    low_low_pressure: float, 
-                    cumulative_rainfall: float, 
-                    cook_run_id: uuid.uuid4,
-                    finished: bool):
+    def __init__(
+        self,
+        id: uuid.uuid4,
+        station_id: uuid.uuid4,
+        date: datetime.datetime,
+        avg_high_temperature: float,
+        avg_low_temperature: float,
+        avg_avg_temperature: float,
+        avg_humidity: float,
+        avg_max_wind_gust: float,
+        avg_pressure: float,
+        high_high_temperature: float,
+        low_low_temperature: float,
+        high_high_humidity: float,
+        low_low_humidity: float,
+        high_max_wind_gust: float,
+        high_high_pressure: float,
+        low_low_pressure: float,
+        cumulative_rainfall: float,
+        cook_run_id: uuid.uuid4,
+        finished: bool,
+    ):
         self.id = id
         self.station_id = station_id
         self.date = date
