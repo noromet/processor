@@ -179,10 +179,11 @@ def main():
         # we do not care about timezones here
         # get the previous month start and end timestamps
 
-        start_of_month = datetime(now.year, now.month - 1, 1, 0, 0, 0, 0, tz)
-        end_of_month = datetime(now.year, now.month, 1, 0, 0, 0, 0, tz) - timedelta(
-            seconds=1
-        )
+        first_of_current = datetime(now.year, now.month, 1, 0, 0, 0, 0, tz)
+        # Go back one day and get first of previous month
+        last_of_previous = first_of_current - timedelta(days=1)
+        start_of_month = datetime(last_of_previous.year, last_of_previous.month, 1, 0, 0, 0, 0, tz)
+        end_of_month = first_of_current - timedelta(seconds=1)
 
         interval = (start_of_month, end_of_month)
 
