@@ -221,7 +221,12 @@ def calculate_wind(df: pd.DataFrame) -> tuple:
         return None, None
     else:
         high_wind_speed = float(max_global_wind_speed)
-        high_wind_direction = df.loc[df[using_column].idxmax()]["wind_direction"]
+
+        if using_column == "max_max_wind_gust":
+            high_wind_direction = None #porque no existe un record de la dirección del viento puntual, por lo que la dirección no coincidirá
+        else:
+            high_wind_direction = df.loc[df[using_column].idxmax()]["wind_direction"]
+        
         if pd.isna(high_wind_direction):
             high_wind_direction = None
         else:
