@@ -111,7 +111,7 @@ def get_weather_records_for_station_and_interval(
     assert date_from.tzinfo is not None
 
     query = """
-        SELECT id, station_id, source_timestamp, temperature, wind_speed, max_wind_speed, wind_direction, rain, humidity, pressure, flagged, taken_timestamp, gatherer_thread_id, cumulative_rain, max_temp, min_temp, max_wind_gust
+        SELECT id, station_id, source_timestamp, temperature, wind_speed, max_wind_speed, wind_direction, rain, humidity, pressure, flagged, taken_timestamp, gatherer_thread_id, cumulative_rain, max_temp, min_temp, max_wind_gust, max_max_wind_gust
         FROM weather_record
         WHERE station_id = %s AND source_timestamp >= %s AND source_timestamp <= %s
     """

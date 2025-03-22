@@ -96,7 +96,6 @@ class DailyProcessor:
             records = [
                 WeatherRecord(*record) for record in records
             ]  # list of WeatherRecord objects
-
             if len(records) == 0 or records is None:
                 logging.warning(
                     f"No weather records retrieved for station {station_id}"
@@ -145,6 +144,7 @@ def build_daily_record(
                 "max_temp": record.max_temp,
                 "min_temp": record.min_temp,
                 "max_wind_gust": record.max_wind_gust,
+                "max_max_wind_gust": record.max_max_wind_gust,
             }
             for record in records
         ]
@@ -201,9 +201,10 @@ def calculate_pressure(df: pd.DataFrame) -> tuple:
 def calculate_wind(df: pd.DataFrame) -> tuple:
     max_wind_speed = df[["wind_speed"]].max().max()
     max_wind_gust = df[["max_wind_gust"]].max().max()
+    max_max_wind_gust = df[["max_max_wind_gust"]].max().max()
     max_max_wind_speed = df[["max_wind_speed"]].max().max()
 
-    wind_columns = ["wind_speed", "max_wind_speed", "max_wind_gust"]
+    wind_columns = ["wind_speed", "max_wind_speed", "max_wind_gust", "max_max_wind_gust"]
     max_global_wind_speed = df[wind_columns].max().max()
 
     using_column = None
@@ -213,6 +214,8 @@ def calculate_wind(df: pd.DataFrame) -> tuple:
         using_column = "max_wind_speed"
     elif max_wind_gust == max_global_wind_speed:
         using_column = "max_wind_gust"
+    elif max_max_wind_gust == max_global_wind_speed:
+        using_column = "max_max_wind_gust"
 
     if pd.isna(max_global_wind_speed):
         return None, None

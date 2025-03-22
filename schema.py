@@ -22,6 +22,7 @@ class WeatherRecord:
         max_temp: float,
         min_temp: float,
         max_wind_gust: float,
+        max_max_wind_gust: float
     ):
 
         self.id = id
@@ -41,6 +42,7 @@ class WeatherRecord:
         self.max_temp = max_temp
         self.min_temp = min_temp
         self.max_wind_gust = max_wind_gust
+        self.max_max_wind_gust = max_max_wind_gust
 
 
 class DailyRecord:
