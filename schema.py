@@ -105,6 +105,7 @@ class MonthlyRecord:
         max_max_humidity: float,
         min_min_humidity: float,
         max_max_pressure: float,
+        max_max_wind_gust: float,
         min_min_pressure: float,
         cumulative_rainfall: float,
         cook_run_id: uuid.uuid4,
@@ -128,3 +129,4 @@ class MonthlyRecord:
         self.cumulative_rainfall = cumulative_rainfall
         self.cook_run_id = cook_run_id
         self.finished = finished
+        self.max_max_wind_gust = max_max_wind_gust
