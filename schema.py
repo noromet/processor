@@ -19,8 +19,8 @@ class WeatherRecord:
         taken_timestamp: datetime.datetime,
         gatherer_thread_id: uuid.uuid4,
         cumulative_rain: float,
-        max_temp: float,
-        min_temp: float,
+        max_temperature: float,
+        min_temperature: float,
         wind_gust: float,
         max_wind_gust: float
     ):
@@ -39,9 +39,9 @@ class WeatherRecord:
         self.flagged = flagged
         self.taken_timestamp = taken_timestamp
         self.gatherer_thread_id = gatherer_thread_id
-        self.max_temp = max_temp
-        self.min_temp = min_temp
-        self.wind_gust = max_wind_gust
+        self.max_temperature = max_temperature
+        self.min_temperature = min_temperature
+        self.wind_gust = wind_gust
         self.max_wind_gust = max_wind_gust
 
 
