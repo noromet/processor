@@ -3,7 +3,6 @@ from dotenv import load_dotenv
 import argparse
 from datetime import datetime, timedelta
 import time
-import json
 from log import config_logger
 import logging
 
@@ -18,7 +17,7 @@ from database import (
     get_single_station,
     get_present_timezones,
 )
-import pytz
+import zoneinfo
 
 # region definitions
 load_dotenv(verbose=True)
@@ -88,20 +87,16 @@ def main():
     mode = args.mode
 
     if args.pretend_its_date is None:
-        now = datetime.now(pytz.utc)
+        now = datetime.now(zoneinfo.ZoneInfo("UTC"))
     else:
         now = datetime.fromisoformat(args.pretend_its_date)
-        now = now.replace(hour=12, minute=0, second=0, microsecond=0, tzinfo=pytz.utc)
+        now = now.replace(hour=12, minute=0, second=0, microsecond=0, tzinfo=zoneinfo.ZoneInfo("UTC"))
 
-    print("NOW:", now)
+    logging.info(f"NOW: {now}")
 
     stations = []
     if args.id:
-        stations = [
-            get_single_station(
-                args.id,
-            )
-        ]
+        stations = [get_single_station(args.id)]
     else:
         stations = get_all_stations()
 
@@ -110,7 +105,11 @@ def main():
         Database.close_all_connections()
         return
 
-    timezones = [pytz.timezone(tzname) for tzname in get_present_timezones()]
+    timezones = [zoneinfo.ZoneInfo(tzname) for tzname in get_present_timezones()]
+    if len(timezones) == 0:
+        logging.info("No timezones found!")
+        Database.close_all_connections()
+        return
 
     # calculate all 00:00-23:59 intervals (full days) that have ended in the past 24 hours for each timezone
     past_24_hours = now - timedelta(days=1)
@@ -122,23 +121,27 @@ def main():
             now_tz = now.astimezone(tz)
             past_24_hours_tz = past_24_hours.astimezone(tz)
 
-            # Calculate the start and end of the full day intervals
-            start_of_day = tz.localize(
-                datetime(
-                    past_24_hours_tz.year, past_24_hours_tz.month, past_24_hours_tz.day
-                )
+            start_of_day = datetime(
+                past_24_hours_tz.year,
+                past_24_hours_tz.month,
+                past_24_hours_tz.day,
+                0,
+                0,
+                0,
+                0,
+                tz,
             )
+            
             end_of_day = start_of_day + timedelta(days=1) - timedelta(seconds=1)
 
             if end_of_day < now_tz:
                 full_days_intervals[tz] = (start_of_day, end_of_day)
-        # full_days_intervals now contains the intervals for each timezone
 
         if len(full_days_intervals) == 0:
             logging.error("Logic error: no full days found")
             Database.close_all_connections()
             return
-
+        
         processors = []
         for tz, interval in full_days_intervals.items():
             date_on_tz = start_of_day.astimezone(tz).date()
@@ -147,10 +150,9 @@ def main():
             )
             logging.info(f"Processing mode: {mode}.")
 
-            stations_for_tz = [station for station in stations if station[2] == tz.zone]
-
+            stations_for_tz = [station for station in stations if station[2] == str(tz)]
             if len(stations_for_tz) == 0:
-                logging.error(f"Logic error: no stations in timezone {tz}")
+                logging.warning(f"No stations in timezone {tz}. Ignore this warning if you specified a single station.")
                 continue
 
             station_ids = [station[0] for station in stations_for_tz]
@@ -167,8 +169,7 @@ def main():
             )
 
     elif mode == "monthly":
-        full_months_intervals = {}
-        tz = pytz.utc
+        tz = zoneinfo.ZoneInfo("UTC") #does not really matter, months are abstract enough
 
         if now.day == 1:
             logging.error(
@@ -176,12 +177,11 @@ def main():
             )
             return
 
-        # we do not care about timezones here
         # get the previous month start and end timestamps
-
         first_of_current = datetime(now.year, now.month, 1, 0, 0, 0, 0, tz)
         # Go back one day and get first of previous month
         last_of_previous = first_of_current - timedelta(days=1)
+
         start_of_month = datetime(last_of_previous.year, last_of_previous.month, 1, 0, 0, 0, 0, tz)
         end_of_month = first_of_current - timedelta(seconds=1)
 
@@ -192,7 +192,7 @@ def main():
             f"Processing mode: {mode}. Current timestamp in timezone: {datetime.now(tz=tz).strftime('%Y-%m-%d %H:%M:%S %z')}"
         )
         logging.info(
-            f"Working with hardcoded timezone: {tz}. Interval: {interval}. Date: {start_of_month.date()}"
+            f"Working with hardcoded timezone: {tz}. Interval: {interval}. Start of month date: {start_of_month.date()}"
         )
 
         station_ids = [station[0] for station in stations]

@@ -82,7 +82,7 @@ class MonthlyProcessor:
             )  # tuples
             records = [
                 DailyRecord(*record) for record in records
-            ]  # list of WeatherRecord objects
+            ]  # list of DailyRecord objects
 
             if len(records) == 0 or records is None:
                 logging.warning(f"No daily records retrieved for station {station_id}")
@@ -117,54 +117,56 @@ def build_monthly_record(
                 "id": record.id,
                 "station_id": record.station_id,
                 "date": record.date,
-                "high_temperature": record.high_temperature,
-                "low_temperature": record.low_temperature,
-                "high_wind_gust": record.high_wind_gust,
-                "high_wind_direction": record.high_wind_direction,
-                "high_pressure": record.high_pressure,
-                "low_pressure": record.low_pressure,
+                "max_temperature": record.max_temperature,
+                "min_temperature": record.min_temperature,
+                "max_wind_gust": record.max_wind_gust,
+                "max_wind_speed": record.max_wind_speed,
+                "avg_wind_direction": record.avg_wind_direction,
+                "max_pressure": record.max_pressure,
+                "min_pressure": record.min_pressure,
                 "rain": record.rain,
                 "flagged": record.flagged,
                 "finished": record.finished,
                 "cook_run_id": record.cook_run_id,
                 "avg_temperature": record.avg_temperature,
-                "high_humidity": record.high_humidity,
+                "max_humidity": record.max_humidity,
                 "avg_humidity": record.avg_humidity,
-                "low_humidity": record.low_humidity,
+                "min_humidity": record.min_humidity,
             }
             for record in records
         ]
     )
 
     (
-        high_high_temperature,
-        low_low_temperature,
+        max_max_temperature,
+        min_min_temperature,
         avg_avg_temperature,
-        avg_high_temperature,
-        avg_low_temperature,
+        avg_max_temperature,
+        avg_min_temperature,
     ) = calculate_temperature(df)
-    high_max_wind_gust, avg_max_wind_gust = calculate_wind(df)
-    high_high_pressure, low_low_pressure, avg_pressure = calculate_pressure(df)
+    
+    max_max_wind_gust, avg_max_wind_gust = calculate_wind(df)
+    max_max_pressure, min_min_pressure, avg_pressure = calculate_pressure(df)
     cumulative_rainfall = calculate_rain(df)
-    high_high_humidity, low_low_humidity, avg_humidity = calculate_humidity(df)
+    max_max_humidity, min_min_humidity, avg_humidity = calculate_humidity(df)
 
     return MonthlyRecord(
         id=str(uuid.uuid4()),
         station_id=records[0].station_id,
         date=date,
-        avg_high_temperature=avg_high_temperature,
-        avg_low_temperature=avg_low_temperature,
+        avg_max_temperature=avg_max_temperature,
+        avg_min_temperature=avg_min_temperature,
         avg_avg_temperature=avg_avg_temperature,
         avg_humidity=avg_humidity,
         avg_max_wind_gust=avg_max_wind_gust,
         avg_pressure=avg_pressure,
-        high_high_temperature=high_high_temperature,
-        low_low_temperature=low_low_temperature,
-        high_high_humidity=high_high_humidity,
-        low_low_humidity=low_low_humidity,
-        high_max_wind_gust=high_max_wind_gust,
-        high_high_pressure=high_high_pressure,
-        low_low_pressure=low_low_pressure,
+        max_max_temperature=max_max_temperature,
+        min_min_temperature=min_min_temperature,
+        max_max_humidity=max_max_humidity,
+        min_min_humidity=min_min_humidity,
+        max_max_wind_gust=max_max_wind_gust,
+        max_max_pressure=max_max_pressure,
+        min_min_pressure=min_min_pressure,
         cumulative_rainfall=cumulative_rainfall,
         cook_run_id=None,
         finished=True,
@@ -172,72 +174,72 @@ def build_monthly_record(
 
 
 def calculate_temperature(df: pd.DataFrame) -> tuple:
-    df_high = df.dropna(subset=["high_temperature"])
-    df_low = df.dropna(subset=["low_temperature"])
+    df_max = df.dropna(subset=["max_temperature"])
+    df_min = df.dropna(subset=["min_temperature"])
     df_avg = df.dropna(subset=["avg_temperature"])
 
-    high_high_temperature = (
-        float(round(df_high["high_temperature"].max(), 2))
-        if not df_high.empty
+    max_max_temperature = (
+        float(round(df_max["max_temperature"].max(), 2))
+        if not df_max.empty
         else None
     )
-    low_low_temperature = (
-        float(round(df_low["low_temperature"].min(), 2)) if not df_low.empty else None
+    min_min_temperature = (
+        float(round(df_min["min_temperature"].min(), 2)) if not df_min.empty else None
     )
     avg_avg_temperature = (
         float(round(df_avg["avg_temperature"].mean(), 2)) if not df_avg.empty else None
     )
-    avg_high_temperature = (
-        float(round(df_high["high_temperature"].mean(), 2))
-        if not df_high.empty
+    avg_max_temperature = (
+        float(round(df_max["max_temperature"].mean(), 2))
+        if not df_max.empty
         else None
     )
-    avg_low_temperature = (
-        float(round(df_low["low_temperature"].mean(), 2)) if not df_low.empty else None
+    avg_min_temperature = (
+        float(round(df_min["min_temperature"].mean(), 2)) if not df_min.empty else None
     )
 
     return (
-        high_high_temperature,
-        low_low_temperature,
+        max_max_temperature,
+        min_min_temperature,
         avg_avg_temperature,
-        avg_high_temperature,
-        avg_low_temperature,
+        avg_max_temperature,
+        avg_min_temperature,
     )
 
 
 def calculate_wind(df: pd.DataFrame) -> tuple:
-    df_high = df.dropna(subset=["high_wind_gust"])
-    high_max_wind_gust = (
-        float(round(df_high["high_wind_gust"].max(), 2)) if not df_high.empty else None
+    df_max = df.dropna(subset=["max_wind_gust"])
+    max_max_wind_gust = (
+        float(round(df_max["max_wind_gust"].max(), 2)) if not df_max.empty else None
     )
     avg_max_wind_gust = (
-        float(round(df_high["high_wind_gust"].mean(), 2)) if not df_high.empty else None
+        float(round(df_max["max_wind_gust"].mean(), 2)) if not df_max.empty else None
     )
 
-    return high_max_wind_gust, avg_max_wind_gust
+    return max_max_wind_gust, avg_max_wind_gust
 
 
 def calculate_pressure(df: pd.DataFrame) -> tuple:
-    df_high = df.dropna(subset=["high_pressure"])
-    df_low = df.dropna(subset=["low_pressure"])
+    df_max = df.dropna(subset=["max_pressure"])
+    df_min = df.dropna(subset=["min_pressure"])
 
-    high_high_pressure = (
-        float(round(df_high["high_pressure"].max(), 2)) if not df_high.empty else None
+    max_max_pressure = (
+        float(round(df_max["max_pressure"].max(), 2)) if not df_max.empty else None
     )
-    low_low_pressure = (
-        float(round(df_low["low_pressure"].min(), 2)) if not df_low.empty else None
+    min_min_pressure = (
+        float(round(df_min["min_pressure"].min(), 2)) if not df_min.empty else None
     )
 
-    if not df_high.empty and not df_low.empty:
+    if not df_max.empty and not df_min.empty:
         avg_pressure = float(
             round(
-                pd.concat([df_high["high_pressure"], df_low["low_pressure"]]).mean(), 2
+                pd.concat([df_max["max_pressure"], df_min["min_pressure"]]).mean(), 2
             )
         )
     else:
         avg_pressure = None
 
-    return high_high_pressure, low_low_pressure, avg_pressure
+    return max_max_pressure, min_min_pressure, avg_pressure
 
 
 def calculate_rain(df: pd.DataFrame) -> float:
@@ -250,18 +252,18 @@ def calculate_rain(df: pd.DataFrame) -> float:
 
 
 def calculate_humidity(df: pd.DataFrame) -> tuple:
-    df_high = df.dropna(subset=["high_humidity"])
-    df_low = df.dropna(subset=["low_humidity"])
+    df_max = df.dropna(subset=["max_humidity"])
+    df_min = df.dropna(subset=["min_humidity"])
     df_avg = df.dropna(subset=["avg_humidity"])
 
-    high_high_humidity = (
-        float(round(df_high["high_humidity"].max(), 2)) if not df_high.empty else None
+    max_max_humidity = (
+        float(round(df_max["max_humidity"].max(), 2)) if not df_max.empty else None
     )
-    low_low_humidity = (
-        float(round(df_low["low_humidity"].min(), 2)) if not df_low.empty else None
+    min_min_humidity = (
+        float(round(df_min["min_humidity"].min(), 2)) if not df_min.empty else None
     )
     avg_humidity = (
         float(round(df_avg["avg_humidity"].mean(), 2)) if not df_avg.empty else None
     )
 
-    return high_high_humidity, low_low_humidity, avg_humidity
+    return max_max_humidity, min_min_humidity, avg_humidity
