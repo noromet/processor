@@ -10,7 +10,7 @@ import logging
 
 from schema import WeatherRecord, DailyRecord
 from database import save_daily_record, get_weather_records_for_station_and_interval
-import pytz
+import zoneinfo
 
 
 class DailyProcessor:
@@ -21,7 +21,7 @@ class DailyProcessor:
         station_set: list,
         single_thread: bool = False,
         interval: tuple = None,
-        timezone: pytz.timezone = None,
+        timezone: zoneinfo.ZoneInfo = zoneinfo.ZoneInfo("UTC"),
         date: datetime.date = None,
         dry_run: bool = True,
     ):
@@ -33,18 +33,14 @@ class DailyProcessor:
         self.timezone = timezone
         self.date = date
 
-        self.utc_interval = (
-            self.timezone.localize(
-                datetime.datetime.combine(interval[0], datetime.time.min)
-            ).astimezone(pytz.utc),
-            self.timezone.localize(
-                datetime.datetime.combine(interval[1], datetime.time.max)
-            ).astimezone(pytz.utc),
+        self.timezone_adjusted_interval = (
+            datetime.datetime.combine(self.date, datetime.time.min, self.timezone),
+            datetime.datetime.combine(self.date, datetime.time.max, self.timezone),
         )
-
+        
     def run(self):
         logging.info(f"Processing daily data with run ID {self.run_id}")
-        logging.info(f"UTC interval: {self.utc_interval[0]} - {self.utc_interval[1]}")
+        logging.info(f"Timezone-aware interval: {self.timezone_adjusted_interval[0]} - {self.timezone_adjusted_interval[1]}")
 
         if len(self.station_set) == 0:
             logging.warning("No active stations found!")
@@ -92,7 +88,7 @@ class DailyProcessor:
 
         try:
             records = get_weather_records_for_station_and_interval(
-                station_id, self.utc_interval[0], self.utc_interval[1]
+                station_id, self.timezone_adjusted_interval[0], self.timezone_adjusted_interval[1]
             )  # tuples
             records = [
                 WeatherRecord(*record) for record in records
@@ -102,6 +98,8 @@ class DailyProcessor:
                     f"No weather records retrieved for station {station_id}"
                 )
                 return
+            else:
+                logging.info(f"Records range from {records[0].source_timestamp} to {records[-1].source_timestamp}")
 
             daily_record = build_daily_record(records, self.date, self.timezone)
             daily_record.cook_run_id = self.run_id
@@ -165,7 +163,8 @@ def build_daily_record(
         date=date,
         max_temperature=max_temperature,
         min_temperature=min_temperature,
-        max_wind_gust=max_wind_speed,
+        max_wind_speed=max_wind_speed,
+        max_wind_gust=max_wind_gust,
         avg_wind_direction=avg_wind_direction,
         max_pressure=max_pressure,
         min_pressure=min_pressure,
@@ -226,7 +225,7 @@ def calculate_wind(df: pd.DataFrame) -> tuple:
     avg_direction_rad = np.arctan2(y_mean, x_mean)
     avg_wind_direction = np.rad2deg(avg_direction_rad) % 360  # Normalize to [0, 360)
 
-    return max_global_wind_speed, max_global_wind_gust, avg_wind_direction
+    return float(max_global_wind_speed), float(max_global_wind_gust), int(avg_wind_direction)
 
 
 def calculate_temperature(df: pd.DataFrame) -> tuple:

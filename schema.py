@@ -1,6 +1,6 @@
 import datetime
 import uuid
-
+import zoneinfo
 
 class WeatherRecord:
     def __init__(
@@ -66,7 +66,7 @@ class DailyRecord:
         max_humidity: float,
         avg_humidity: float,
         min_humidity: float,
-        timezone: str,
+        timezone: zoneinfo.ZoneInfo,
     ):
         self.id = id
         self.station_id = station_id

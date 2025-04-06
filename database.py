@@ -144,12 +144,13 @@ def get_weather_records_for_station_and_interval(
             taken_timestamp, 
             gatherer_thread_id, 
             cumulative_rain, 
-            max_temp, 
-            min_temp, 
-            max_wind_gust, 
-            max_max_wind_gust
+            max_temperature, 
+            min_temperature, 
+            wind_gust, 
+            max_wind_gust
         FROM weather_record
         WHERE station_id = %s AND source_timestamp >= %s AND source_timestamp <= %s
+        ORDER BY source_timestamp asc
     """
 
     with CursorFromConnectionFromPool() as cursor:
@@ -260,7 +261,7 @@ def save_daily_record(record: DailyRecord) -> None:
                 record.max_humidity,
                 record.avg_humidity,
                 record.min_humidity,
-                record.timezone,
+                str(record.timezone),
                 record.station_id,
                 record.date,
             )
