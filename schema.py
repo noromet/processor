@@ -21,8 +21,8 @@ class WeatherRecord:
         cumulative_rain: float,
         max_temp: float,
         min_temp: float,
-        max_wind_gust: float,
-        max_max_wind_gust: float
+        wind_gust: float,
+        max_wind_gust: float
     ):
 
         self.id = id
@@ -41,8 +41,8 @@ class WeatherRecord:
         self.gatherer_thread_id = gatherer_thread_id
         self.max_temp = max_temp
         self.min_temp = min_temp
+        self.wind_gust = max_wind_gust
         self.max_wind_gust = max_wind_gust
-        self.max_max_wind_gust = max_max_wind_gust
 
 
 class DailyRecord:
@@ -51,42 +51,42 @@ class DailyRecord:
         id: uuid.uuid4,
         station_id: uuid.uuid4,
         date: datetime.date,
-        high_temperature: float,
-        low_temperature: float,
-        high_wind_gust: float,
-        high_wind_direction: float,
-        high_pressure: float,
-        low_pressure: float,
+        max_temperature: float,
+        min_temperature: float,
+        max_wind_gust: float,
+        max_wind_speed: float,
+        avg_wind_direction: float,
+        max_pressure: float,
+        min_pressure: float,
         rain: float,
         flagged: bool,
         finished: bool,
         cook_run_id: uuid.uuid4,
         avg_temperature: float,
-        high_humidity: float,
+        max_humidity: float,
         avg_humidity: float,
-        low_humidity: float,
+        min_humidity: float,
         timezone: str,
     ):
-
         self.id = id
         self.station_id = station_id
         self.date = date
-        self.high_temperature = high_temperature
-        self.low_temperature = low_temperature
-        self.high_wind_gust = high_wind_gust
-        self.high_wind_direction = high_wind_direction
-        self.high_pressure = high_pressure
-        self.low_pressure = low_pressure
         self.rain = rain
         self.flagged = flagged
         self.finished = finished
         self.cook_run_id = cook_run_id
         self.avg_temperature = avg_temperature
-        self.high_humidity = high_humidity
+        self.max_temperature = max_temperature
+        self.min_temperature = min_temperature
+        self.max_wind_gust = max_wind_gust
+        self.max_wind_speed = max_wind_speed
+        self.avg_wind_direction = avg_wind_direction
+        self.max_pressure = max_pressure
+        self.min_pressure = min_pressure
+        self.max_humidity = max_humidity
         self.avg_humidity = avg_humidity
-        self.low_humidity = low_humidity
+        self.min_humidity = min_humidity
         self.timezone = timezone
-
 
 class MonthlyRecord:
     def __init__(
