@@ -93,10 +93,28 @@ def get_weather_records_for_station_and_date(
         "This function is deprecated. Use get_daily_records_for_station_and_interval instead."
     )
     with CursorFromConnectionFromPool() as cursor:
-        cursor.execute(
-            "SELECT id, station_id, source_timestamp, temperature, wind_speed, max_wind_speed, wind_direction, rain, humidity, pressure, flagged, taken_timestamp, gatherer_thread_id, cumulative_rain, max_temp, min_temp, max_wind_gust "
-            "FROM weather_record "
-            "WHERE station_id = %s AND DATE(source_timestamp) = %s",
+        cursor.execute("""
+        SELECT 
+            id, 
+            station_id, 
+            source_timestamp, 
+            temperature, 
+            wind_speed, 
+            max_wind_speed,
+            wind_direction, 
+            rain, 
+            humidity, 
+            pressure, 
+            flagged, 
+            taken_timestamp, 
+            gatherer_thread_id, 
+            cumulative_rain, 
+            max_temperature, 
+            min_temperature, 
+            wind_gust,
+            max_wind_gust
+        FROM weather_record 
+        WHERE station_id = %s AND DATE(source_timestamp) = %s""",
             (station_id, date),
         )
         records = cursor.fetchall()
@@ -111,7 +129,25 @@ def get_weather_records_for_station_and_interval(
     assert date_from.tzinfo is not None
 
     query = """
-        SELECT id, station_id, source_timestamp, temperature, wind_speed, max_wind_speed, wind_direction, rain, humidity, pressure, flagged, taken_timestamp, gatherer_thread_id, cumulative_rain, max_temp, min_temp, max_wind_gust, max_max_wind_gust
+        SELECT 
+            id, 
+            station_id, 
+            source_timestamp, 
+            temperature, 
+            wind_speed, 
+            max_wind_speed, 
+            wind_direction, 
+            rain, 
+            humidity, 
+            pressure, 
+            flagged, 
+            taken_timestamp, 
+            gatherer_thread_id, 
+            cumulative_rain, 
+            max_temp, 
+            min_temp, 
+            max_wind_gust, 
+            max_max_wind_gust
         FROM weather_record
         WHERE station_id = %s AND source_timestamp >= %s AND source_timestamp <= %s
     """
@@ -142,20 +178,21 @@ def get_daily_records_for_station_and_date(
                 id, 
                 station_id, 
                 date, 
-                high_temperature, 
-                low_temperature, 
-                high_wind_gust, 
-                high_wind_direction, 
-                high_pressure, 
-                low_pressure, 
+                max_temperature, 
+                min_temperature, 
+                max_wind_gust,
+                max_wind_speed, 
+                avg_wind_direction, 
+                max_pressure, 
+                min_pressure, 
                 rain, 
                 flagged, 
                 finished, 
                 cook_run_id, 
                 avg_temperature, 
-                high_humidity, 
+                max_humidity, 
                 avg_humidity, 
-                low_humidity,
+                min_humidity,
                 timezone
             FROM daily_record 
             WHERE station_id = %s AND date >= %s AND date <= %s""",
@@ -172,8 +209,14 @@ def save_daily_record(record: DailyRecord) -> None:
     with CursorFromConnectionFromPool() as cursor:
         cursor.execute(
             """
-            INSERT INTO daily_record (id, station_id, date, high_temperature, low_temperature, high_wind_gust, high_wind_direction, high_pressure, low_pressure, rain, flagged, finished, cook_run_id, avg_temperature, high_humidity, avg_humidity, low_humidity, timezone)
-            SELECT %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+            INSERT INTO daily_record (
+                id, station_id, date, max_temperature, min_temperature, max_wind_gust, 
+                max_wind_speed, avg_wind_direction, max_pressure, min_pressure, rain, 
+                flagged, finished, cook_run_id, avg_temperature, max_humidity, 
+                avg_humidity, min_humidity, timezone
+            )
+            SELECT 
+                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
             WHERE NOT EXISTS (
                 SELECT 1 FROM daily_record
                 WHERE station_id = %s AND date = %s AND was_manually_edited = TRUE
@@ -181,47 +224,48 @@ def save_daily_record(record: DailyRecord) -> None:
             ON CONFLICT (station_id, date) DO UPDATE SET
                 station_id = EXCLUDED.station_id,
                 date = EXCLUDED.date,
-                high_temperature = EXCLUDED.high_temperature,
-                low_temperature = EXCLUDED.low_temperature,
-                high_wind_gust = EXCLUDED.high_wind_gust,
-                high_wind_direction = EXCLUDED.high_wind_direction,
-                high_pressure = EXCLUDED.high_pressure,
-                low_pressure = EXCLUDED.low_pressure,
+                max_temperature = EXCLUDED.max_temperature,
+                min_temperature = EXCLUDED.min_temperature,
+                max_wind_gust = EXCLUDED.max_wind_gust,
+                max_wind_speed = EXCLUDED.max_wind_speed,
+                avg_wind_direction = EXCLUDED.avg_wind_direction,
+                max_pressure = EXCLUDED.max_pressure,
+                min_pressure = EXCLUDED.min_pressure,
                 rain = EXCLUDED.rain,
                 flagged = EXCLUDED.flagged,
                 finished = EXCLUDED.finished,
                 cook_run_id = EXCLUDED.cook_run_id,
                 avg_temperature = EXCLUDED.avg_temperature,
-                high_humidity = EXCLUDED.high_humidity,
+                max_humidity = EXCLUDED.max_humidity,
                 avg_humidity = EXCLUDED.avg_humidity,
-                low_humidity = EXCLUDED.low_humidity,
+                min_humidity = EXCLUDED.min_humidity,
                 timezone = EXCLUDED.timezone
             """,
             (
                 record.id,
                 record.station_id,
                 record.date,
-                record.high_temperature,
-                record.low_temperature,
-                record.high_wind_gust,
-                record.high_wind_direction,
-                record.high_pressure,
-                record.low_pressure,
+                record.max_temperature,
+                record.min_temperature,
+                record.max_wind_gust,
+                record.max_wind_speed,
+                record.avg_wind_direction,
+                record.max_pressure,
+                record.min_pressure,
                 record.rain,
                 record.flagged,
                 record.finished,
                 record.cook_run_id,
                 record.avg_temperature,
-                record.high_humidity,
+                record.max_humidity,
                 record.avg_humidity,
-                record.low_humidity,
-                record.timezone.zone,
+                record.min_humidity,
+                record.timezone,
                 record.station_id,
                 record.date,
-            ),
+            )
         )
-
-
+        
 def save_monthly_record(record: MonthlyRecord) -> None:
     """Save a monthly record to the database."""
     record.id = str(uuid.uuid4())
@@ -229,24 +273,29 @@ def save_monthly_record(record: MonthlyRecord) -> None:
     with CursorFromConnectionFromPool() as cursor:
         cursor.execute(
             """
-            INSERT INTO monthly_record (id, station_id, date, avg_high_temperature, avg_low_temperature, avg_avg_temperature, avg_humidity, avg_max_wind_gust, avg_pressure, high_high_temperature, low_low_temperature, high_high_humidity, low_low_humidity, high_max_wind_gust, high_high_pressure, low_low_pressure, cumulative_rainfall, cook_run_id, finished)
+            INSERT INTO monthly_record (
+                id, station_id, date, avg_max_temperature, avg_min_temperature, 
+                avg_avg_temperature, avg_humidity, avg_max_wind_gust, avg_pressure, 
+                max_max_temperature, min_min_temperature, max_max_humidity, 
+                min_min_humidity, max_max_pressure, min_min_pressure, cumulative_rainfall, 
+                cook_run_id, finished
+            )
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             ON CONFLICT (station_id, date) DO UPDATE SET
                 station_id = EXCLUDED.station_id,
                 date = EXCLUDED.date,
-                avg_high_temperature = EXCLUDED.avg_high_temperature,
-                avg_low_temperature = EXCLUDED.avg_low_temperature,
+                avg_max_temperature = EXCLUDED.avg_max_temperature,
+                avg_min_temperature = EXCLUDED.avg_min_temperature,
                 avg_avg_temperature = EXCLUDED.avg_avg_temperature,
                 avg_humidity = EXCLUDED.avg_humidity,
                 avg_max_wind_gust = EXCLUDED.avg_max_wind_gust,
                 avg_pressure = EXCLUDED.avg_pressure,
-                high_high_temperature = EXCLUDED.high_high_temperature,
-                low_low_temperature = EXCLUDED.low_low_temperature,
-                high_high_humidity = EXCLUDED.high_high_humidity,
-                low_low_humidity = EXCLUDED.low_low_humidity,
-                high_max_wind_gust = EXCLUDED.high_max_wind_gust,
-                high_high_pressure = EXCLUDED.high_high_pressure,
-                low_low_pressure = EXCLUDED.low_low_pressure,
+                max_max_temperature = EXCLUDED.max_max_temperature,
+                min_min_temperature = EXCLUDED.min_min_temperature,
+                max_max_humidity = EXCLUDED.max_max_humidity,
+                min_min_humidity = EXCLUDED.min_min_humidity,
+                max_max_pressure = EXCLUDED.max_max_pressure,
+                min_min_pressure = EXCLUDED.min_min_pressure,
                 cumulative_rainfall = EXCLUDED.cumulative_rainfall,
                 cook_run_id = EXCLUDED.cook_run_id,
                 finished = EXCLUDED.finished
@@ -255,25 +304,24 @@ def save_monthly_record(record: MonthlyRecord) -> None:
                 record.id,
                 record.station_id,
                 record.date,
-                record.avg_high_temperature,
-                record.avg_low_temperature,
+                record.avg_max_temperature,
+                record.avg_min_temperature,
                 record.avg_avg_temperature,
                 record.avg_humidity,
                 record.avg_max_wind_gust,
                 record.avg_pressure,
-                record.high_high_temperature,
-                record.low_low_temperature,
-                record.high_high_humidity,
-                record.low_low_humidity,
-                record.high_max_wind_gust,
-                record.high_high_pressure,
-                record.low_low_pressure,
+                record.max_max_temperature,
+                record.min_min_temperature,
+                record.max_max_humidity,
+                record.min_min_humidity,
+                record.max_max_pressure,
+                record.min_min_pressure,
                 record.cumulative_rainfall,
                 record.cook_run_id,
                 record.finished,
-            ),
+            )
         )
-
+        
 
 def get_present_timezones() -> List[str]:
     """Get all unique timezones from the weather stations."""

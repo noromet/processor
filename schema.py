@@ -93,40 +93,38 @@ class MonthlyRecord:
         self,
         id: uuid.uuid4,
         station_id: uuid.uuid4,
-        date: datetime.datetime,
-        avg_high_temperature: float,
-        avg_low_temperature: float,
+        date: datetime.date,
+        avg_max_temperature: float,
+        avg_min_temperature: float,
         avg_avg_temperature: float,
         avg_humidity: float,
         avg_max_wind_gust: float,
         avg_pressure: float,
-        high_high_temperature: float,
-        low_low_temperature: float,
-        high_high_humidity: float,
-        low_low_humidity: float,
-        high_max_wind_gust: float,
-        high_high_pressure: float,
-        low_low_pressure: float,
+        max_max_temperature: float,
+        min_min_temperature: float,
+        max_max_humidity: float,
+        min_min_humidity: float,
+        max_max_pressure: float,
+        min_min_pressure: float,
         cumulative_rainfall: float,
         cook_run_id: uuid.uuid4,
-        finished: bool,
+        finished: bool = True,
     ):
         self.id = id
         self.station_id = station_id
         self.date = date
-        self.avg_high_temperature = avg_high_temperature
-        self.avg_low_temperature = avg_low_temperature
+        self.avg_max_temperature = avg_max_temperature
+        self.avg_min_temperature = avg_min_temperature
         self.avg_avg_temperature = avg_avg_temperature
         self.avg_humidity = avg_humidity
         self.avg_max_wind_gust = avg_max_wind_gust
         self.avg_pressure = avg_pressure
-        self.high_high_temperature = high_high_temperature
-        self.low_low_temperature = low_low_temperature
-        self.high_high_humidity = high_high_humidity
-        self.low_low_humidity = low_low_humidity
-        self.high_max_wind_gust = high_max_wind_gust
-        self.high_high_pressure = high_high_pressure
-        self.low_low_pressure = low_low_pressure
+        self.max_max_temperature = max_max_temperature
+        self.min_min_temperature = min_min_temperature
+        self.max_max_humidity = max_max_humidity
+        self.min_min_humidity = min_min_humidity
+        self.max_max_pressure = max_max_pressure
+        self.min_min_pressure = min_min_pressure
         self.cumulative_rainfall = cumulative_rainfall
         self.cook_run_id = cook_run_id
         self.finished = finished
