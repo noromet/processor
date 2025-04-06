@@ -279,7 +279,7 @@ def save_monthly_record(record: MonthlyRecord) -> None:
                 avg_avg_temperature, avg_humidity, avg_max_wind_gust, avg_pressure, 
                 max_max_temperature, min_min_temperature, max_max_humidity, 
                 min_min_humidity, max_max_pressure, min_min_pressure, cumulative_rainfall, 
-                cook_run_id, finished
+                cook_run_id, finished, max_max_wind_gust
             )
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             ON CONFLICT (station_id, date) DO UPDATE SET
@@ -320,6 +320,7 @@ def save_monthly_record(record: MonthlyRecord) -> None:
                 record.cumulative_rainfall,
                 record.cook_run_id,
                 record.finished,
+                record.max_max_wind_gust,
             )
         )
         

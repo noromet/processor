@@ -168,45 +168,43 @@ def main():
                 )
             )
 
-    # elif mode == "monthly":
-    #     full_months_intervals = {}
-    #     tz = pytz.utc
+    elif mode == "monthly":
+        tz = zoneinfo.ZoneInfo("UTC") #does not really matter, months are abstract enough
 
-    #     if now.day == 1:
-    #         logging.error(
-    #             "Error: running monthly processor on the first day of the month will lead to inconsistencies."
-    #         )
-    #         return
+        if now.day == 1:
+            logging.error(
+                "Error: running monthly processor on the first day of the month will lead to inconsistencies."
+            )
+            return
 
-    #     # we do not care about timezones here
-    #     # get the previous month start and end timestamps
+        # get the previous month start and end timestamps
+        first_of_current = datetime(now.year, now.month, 1, 0, 0, 0, 0, tz)
+        # Go back one day and get first of previous month
+        last_of_previous = first_of_current - timedelta(days=1)
 
-    #     first_of_current = datetime(now.year, now.month, 1, 0, 0, 0, 0, tz)
-    #     # Go back one day and get first of previous month
-    #     last_of_previous = first_of_current - timedelta(days=1)
-    #     start_of_month = datetime(last_of_previous.year, last_of_previous.month, 1, 0, 0, 0, 0, tz)
-    #     end_of_month = first_of_current - timedelta(seconds=1)
+        start_of_month = datetime(last_of_previous.year, last_of_previous.month, 1, 0, 0, 0, 0, tz)
+        end_of_month = first_of_current - timedelta(seconds=1)
 
-    #     interval = (start_of_month, end_of_month)
+        interval = (start_of_month, end_of_month)
 
-    #     processors = []
-    #     logging.info(
-    #         f"Processing mode: {mode}. Current timestamp in timezone: {datetime.now(tz=tz).strftime('%Y-%m-%d %H:%M:%S %z')}"
-    #     )
-    #     logging.info(
-    #         f"Working with hardcoded timezone: {tz}. Interval: {interval}. Date: {start_of_month.date()}"
-    #     )
+        processors = []
+        logging.info(
+            f"Processing mode: {mode}. Current timestamp in timezone: {datetime.now(tz=tz).strftime('%Y-%m-%d %H:%M:%S %z')}"
+        )
+        logging.info(
+            f"Working with hardcoded timezone: {tz}. Interval: {interval}. Start of month date: {start_of_month.date()}"
+        )
 
-    #     station_ids = [station[0] for station in stations]
+        station_ids = [station[0] for station in stations]
 
-    #     processors.append(
-    #         MonthlyProcessor(
-    #             station_set=station_ids,
-    #             single_thread=single_thread,
-    #             interval=interval,
-    #             dry_run=DRY_RUN,
-    #         )
-    #     )
+        processors.append(
+            MonthlyProcessor(
+                station_set=station_ids,
+                single_thread=single_thread,
+                interval=interval,
+                dry_run=DRY_RUN,
+            )
+        )
 
     else:
         raise ValueError("Invalid mode")
