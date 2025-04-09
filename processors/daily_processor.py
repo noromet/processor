@@ -199,7 +199,7 @@ def calculate_pressure(df: pd.DataFrame) -> tuple:
     return max_pressure, min_pressure
 
 def calculate_wind(df: pd.DataFrame) -> tuple:
-    wind_columns = ["wind_speed", "max_wind_speed", "wind_gust", "max_wind_gust"]
+    wind_columns = ["wind_speed", "max_wind_speed"]
     wind_gust_columns = ["max_wind_gust", "wind_gust"]
     max_global_wind_speed = df[wind_columns].max().max()
     max_global_wind_gust = df[wind_gust_columns].max().max()
