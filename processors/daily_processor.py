@@ -210,6 +210,11 @@ def calculate_wind(df: pd.DataFrame) -> tuple:
     # Remove rows with NaNs in wind direction or wind speed
     valid_data = df[[wind_speed_column, wind_direction_column]].dropna()
 
+    if valid_data.empty or valid_data[wind_speed_column].sum() == 0:
+        avg_wind_direction = None  # Default value for average wind direction
+        return float(max_global_wind_speed), float(max_global_wind_gust), avg_wind_direction
+
+
     # Convert degrees to radians
     directions_rad = np.deg2rad(valid_data[wind_direction_column])
 
