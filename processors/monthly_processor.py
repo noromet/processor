@@ -158,11 +158,11 @@ class MonthlyProcessor:
             float(round(df_min["min_pressure"].min(), 2)) if not df_min.empty else None
         )
 
-        if not df_max.empty and not df_min.empty:
+        df_both = self.records.dropna(subset=["max_pressure", "min_pressure"])
+        if not df_both.empty:
             avg_pressure = float(
                 round(
-                    pd.concat([df_max["max_pressure"], df_min["min_pressure"]]).mean(),
-                    2,
+                    ((df_both["max_pressure"] + df_both["min_pressure"]) / 2).mean(), 2
                 )
             )
         else:

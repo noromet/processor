@@ -15,8 +15,7 @@ import pandas as pd
 from dotenv import load_dotenv
 
 from log import config_logger
-from processors.daily_processor import DailyProcessor
-from processors.monthly_processor import MonthlyProcessor
+from processors import DailyProcessor, MonthlyProcessor
 from database import Database, database_connection
 from schema import DailyRecord, MonthlyRecord
 
