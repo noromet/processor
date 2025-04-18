@@ -76,6 +76,22 @@ class Database:
         cls.__connection_pool.closeall()
 
     @classmethod
+    @contextmanager
+    def transaction(cls):
+        """Context manager for running multiple statements in a single transaction."""
+        conn = cls.get_connection()
+        cursor = conn.cursor()
+        try:
+            yield cursor
+            conn.commit()
+        except Exception:
+            conn.rollback()
+            raise
+        finally:
+            cursor.close()
+            cls.return_connection(conn)
+
+    @classmethod
     def get_all_stations(cls) -> List[WeatherStation]:
         """Get all active weather stations."""
         with CursorFromConnectionFromPool() as cursor:
@@ -140,7 +156,7 @@ class Database:
                 max_temperature, 
                 min_temperature, 
                 wind_gust, 
-                max_wind_gust,
+                max_wind_gust
             FROM weather_record
             WHERE station_id = %s AND source_timestamp >= %s AND source_timestamp <= %s
             ORDER BY source_timestamp asc
@@ -219,8 +235,10 @@ class Database:
             )
 
     @classmethod
-    def save_daily_record(cls, record: DailyRecord) -> None:
+    def save_daily_record(cls, record: DailyRecord) -> str:
         """Save a daily record to the database."""
+
+        record.dr_id = str(uuid.uuid4()) if record.dr_id is None else record.dr_id
 
         with CursorFromConnectionFromPool() as cursor:
             cursor.execute(
@@ -239,7 +257,6 @@ class Database:
                     WHERE station_id = %s AND date = %s AND was_manually_edited = TRUE
                 )
                 ON CONFLICT (station_id, date) DO UPDATE SET
-                    id = EXCLUDED.id,
                     station_id = EXCLUDED.station_id,
                     date = EXCLUDED.date,
                     max_temperature = EXCLUDED.max_temperature,
@@ -260,6 +277,7 @@ class Database:
                     timezone = EXCLUDED.timezone,
                     monthly_record_id = EXCLUDED.monthly_record_id,
                     meta_construction_data = EXCLUDED.meta_construction_data
+                RETURNING id
                 """,
                 (
                     record.dr_id,
@@ -287,10 +305,25 @@ class Database:
                     record.date,
                 ),
             )
+            record = cursor.fetchone()
+
+            if record is None:
+                logging.warning(
+                    "Existing record was edited manually. Not saving to database."
+                )
+
+                return None
+
+            record_id = record[0]
+            record.dr_id = record_id
+            logging.info("Saved daily record with ID: %s", record_id)
+            return record_id
 
     @classmethod
-    def save_monthly_record(cls, record: MonthlyRecord) -> None:
+    def save_monthly_record(cls, record: MonthlyRecord) -> str:
         """Save a monthly record to the database."""
+
+        record.mr_id = str(uuid.uuid4()) if record.mr_id is None else record.mr_id
 
         with CursorFromConnectionFromPool() as cursor:
             cursor.execute(
@@ -304,7 +337,6 @@ class Database:
                 )
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 ON CONFLICT (station_id, date) DO UPDATE SET
-                    id = EXCLUDED.id,
                     station_id = EXCLUDED.station_id,
                     date = EXCLUDED.date,
                     avg_max_temperature = EXCLUDED.avg_max_temperature,
@@ -322,6 +354,7 @@ class Database:
                     cumulative_rainfall = EXCLUDED.cumulative_rainfall,
                     processor_thread_id = EXCLUDED.processor_thread_id,
                     finished = EXCLUDED.finished
+                RETURNING id
                 """,
                 (
                     record.mr_id,
@@ -345,6 +378,10 @@ class Database:
                     record.max_max_wind_gust,
                 ),
             )
+            record_id = cursor.fetchone()[0]
+            record.mr_id = record_id
+            logging.info("Saved monthly record with ID: %s", record_id)
+            return record_id
 
     @classmethod
     def get_present_timezones(cls) -> List[str]:
@@ -365,15 +402,14 @@ class Database:
             cursor.execute(
                 """
                 INSERT INTO processor_thread (id, thread_timestamp,
-                command, start_interval_date, end_interval_date)
-                VALUES (%s, %s, %s, %s, %s)
+                    command, processed_date)
+                VALUES (%s, %s, %s, %s)
                 """,
                 (
                     processor_thread.thread_id,
                     processor_thread.thread_timestamp,
                     processor_thread.command,
-                    processor_thread.start_interval_date,
-                    processor_thread.end_interval_date,
+                    processor_thread.processed_date,
                 ),
             )
 

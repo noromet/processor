@@ -4,7 +4,6 @@ Module for processing daily weather station data into daily summary records.
 
 import datetime
 import json
-import uuid
 import logging
 
 import pandas as pd
@@ -54,7 +53,6 @@ class DailyProcessor:
 
         meta_construction_data = json.dumps(
             {
-                "constructed_at_utc_unix": datetime.datetime.now().timestamp(),
                 "source_record_ids": self.records["wr_id"]
                 .dropna()
                 .astype(str)
@@ -63,7 +61,7 @@ class DailyProcessor:
         )
 
         return DailyRecord(
-            dr_id=str(uuid.uuid4()),
+            dr_id=None,
             station_id=str(self.station.ws_id),
             date=self.date,
             max_temperature=max_temperature,
@@ -101,7 +99,6 @@ class DailyProcessor:
             bool: True if processing was successful, otherwise False.
         """
         if len(self.records) == 0:
-            logging.warning("No records to process for date %s", self.date)
             return None
 
         try:

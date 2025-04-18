@@ -6,7 +6,7 @@ Runs daily or monthly processing of weather records.
 import os
 import argparse
 import logging
-from datetime import datetime, timedelta, date
+from datetime import datetime, timedelta, date, timezone
 import zoneinfo
 import queue
 import uuid
@@ -17,6 +17,7 @@ from dotenv import load_dotenv
 from log import config_logger
 from processors import DailyProcessor, MonthlyProcessor
 from database import Database, database_connection
+from schema import ProcessorThread
 
 load_dotenv(verbose=True)
 
@@ -187,6 +188,13 @@ def main():
     args = get_args()
     run_id = str(uuid.uuid4())
 
+    thread = ProcessorThread(
+        thread_id=run_id,
+        thread_timestamp=datetime.now(timezone.utc),
+        command=" ".join(os.sys.argv),
+        processed_date=args.date,
+    )
+
     with database_connection(args.db_url):
         logging.info("Connected to database.")
 
@@ -216,6 +224,14 @@ def main():
                             date_to=interval[1],
                         )
 
+                        if len(records) == 0:
+                            logging.warning(
+                                "No records found for station %s on date %s",
+                                station.location,
+                                date_on_tz,
+                            )
+                            continue
+
                         processing_queue.put(
                             DailyProcessor(
                                 station=station,
@@ -237,6 +253,15 @@ def main():
                         end_date=month_interval[1],
                     )
 
+                    if len(records) == 0:
+                        logging.warning(
+                            "No daily records found for station %s in interval %s-%s",
+                            station.location,
+                            month_interval[0].date(),
+                            month_interval[1].date(),
+                        )
+                        continue
+
                     processing_queue.put(
                         MonthlyProcessor(
                             station=station,
@@ -247,6 +272,10 @@ def main():
                     )
 
         logging.info("Starting processing. Run ID: %s", run_id)
+
+        if not processing_queue.empty():
+            Database.save_processor_thread(thread)  # creating before the assignment
+            logging.info("Saved thread with id %s.", thread.thread_id)
 
         while not processing_queue.empty():
             processor = processing_queue.get()

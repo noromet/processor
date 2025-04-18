@@ -112,5 +112,4 @@ class ProcessorThread:
     thread_id: uuid.UUID
     thread_timestamp: datetime.datetime
     command: str
-    start_interval_date: datetime.date
-    end_interval_date: datetime.date
+    processed_date: datetime.date

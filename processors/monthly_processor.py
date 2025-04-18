@@ -2,7 +2,6 @@
 Monthly weather data processor for aggregating and summarizing weather station records.
 """
 
-import uuid
 import logging
 
 import pandas as pd
@@ -58,7 +57,7 @@ class MonthlyProcessor:
         max_max_humidity, min_min_humidity, avg_humidity = self.calculate_humidity()
 
         return MonthlyRecord(
-            mr_id=str(uuid.uuid4()),
+            mr_id=None,
             station_id=str(self.station.ws_id),
             date=self.interval[0],
             avg_max_temperature=avg_max_temperature,
@@ -86,14 +85,15 @@ class MonthlyProcessor:
         Args:
             record (MonthlyRecord): The MonthlyRecord to save.
         """
-        Database.save_monthly_record(record)
-
         record_ids = self.records["dr_id"].dropna().astype(str).tolist()
 
-        Database.set_monthly_record_id_for_daily_records(
-            daily_record_ids=record_ids,
-            monthly_record_id=record.mr_id,
-        )
+        with Database.transaction():  # otherwise, FK is broken
+            monthly_record_id = Database.save_monthly_record(record)
+
+            Database.set_monthly_record_id_for_daily_records(
+                daily_record_ids=record_ids,
+                monthly_record_id=monthly_record_id,
+            )
 
     def run(self) -> MonthlyRecord:
         """
@@ -103,11 +103,6 @@ class MonthlyProcessor:
             bool: True if processing was successful, otherwise False.
         """
         if len(self.records) == 0:
-            logging.warning(
-                "No records to process for interval %s - %s",
-                self.interval[0],
-                self.interval[1],
-            )
             return None
 
         try:
