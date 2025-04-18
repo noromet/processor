@@ -305,16 +305,17 @@ class Database:
                     record.date,
                 ),
             )
-            record = cursor.fetchone()
+            fetched_record = cursor.fetchone()
 
-            if record is None:
+            if fetched_record is None:
                 logging.warning(
                     "Existing record was edited manually. Not saving to database."
                 )
 
                 return None
 
-            record_id = record[0]
+            record_id = fetched_record[0]
+            record.dr_id = record_id
             logging.info("Saved daily record with ID: %s", record_id)
             return record_id
 
@@ -378,6 +379,7 @@ class Database:
                 ),
             )
             record_id = cursor.fetchone()[0]
+            record.mr_id = record_id
             logging.info("Saved monthly record with ID: %s", record_id)
             return record_id
 

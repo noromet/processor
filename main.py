@@ -291,6 +291,8 @@ def main():
 
             if result:
                 logging.info("Successfully processed %s", processor.station.ws_id)
+            else:
+                logging.error("Did not process %s", processor.station.ws_id)
 
         logging.info("Processor done.")
 
