@@ -184,8 +184,10 @@ def get_stations(station_id: str | None = None, all_stations: bool = False):
 # region main
 def main():
     """Main entry point for weather record processing."""
-    config_logger()
     args = get_args()
+
+    config_logger(debug=args.dry_run)
+
     run_id = str(uuid.uuid4())
 
     thread = ProcessorThread(
@@ -285,7 +287,7 @@ def main():
                 len(processor.records),
             )
 
-            result = processor.run()
+            result = processor.run(args.dry_run)
 
             if result:
                 logging.info("Successfully processed %s", processor.station.ws_id)

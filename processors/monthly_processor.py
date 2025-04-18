@@ -95,7 +95,7 @@ class MonthlyProcessor:
                 monthly_record_id=monthly_record_id,
             )
 
-    def run(self) -> MonthlyRecord:
+    def run(self, dry_run: bool) -> MonthlyRecord:
         """
         Process the monthly records and save the MonthlyRecord summary.
 
@@ -107,7 +107,12 @@ class MonthlyProcessor:
 
         try:
             record = self._generate_record()
-            self._save_record(record)
+
+            if not dry_run:
+                self._save_record(record)
+            else:
+                logging.debug("Record not saved: %s", str(record.__dict__))
+
             return record
         except Exception as e:
             logging.error("Error processing monthly record: %s", e)

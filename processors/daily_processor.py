@@ -92,7 +92,7 @@ class DailyProcessor:
         """
         Database.save_daily_record(record)
 
-    def run(self) -> DailyRecord:
+    def run(self, dry_run: bool) -> DailyRecord:
         """
         Process the daily records and save the DailyRecord summary.
         Returns:
@@ -103,7 +103,12 @@ class DailyProcessor:
 
         try:
             record = self._generate_record()
-            self._save_record(record)
+
+            if not dry_run:
+                self._save_record(record)
+            else:
+                logging.debug("Record not saved: %s", str(record.__dict__))
+
             return record
         except Exception as e:
             logging.error("Error processing daily record: %s", e)

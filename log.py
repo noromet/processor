@@ -26,7 +26,7 @@ class ColoredFormatter(logging.Formatter):
         return f"{log_color}{message}{self.RESET}"
 
 
-def config_logger():
+def config_logger(debug: bool = False) -> None:
     """
     Configures the logger to use a custom formatter with colors for different log levels.
     """
@@ -35,5 +35,5 @@ def config_logger():
     handler.setFormatter(formatter)
 
     logger = logging.getLogger()
-    logger.setLevel(logging.DEBUG)
+    logger.setLevel(logging.DEBUG if debug else logging.INFO)
     logger.addHandler(handler)
