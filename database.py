@@ -315,7 +315,6 @@ class Database:
                 return None
 
             record_id = record[0]
-            record.dr_id = record_id
             logging.info("Saved daily record with ID: %s", record_id)
             return record_id
 
@@ -379,7 +378,6 @@ class Database:
                 ),
             )
             record_id = cursor.fetchone()[0]
-            record.mr_id = record_id
             logging.info("Saved monthly record with ID: %s", record_id)
             return record_id
 
