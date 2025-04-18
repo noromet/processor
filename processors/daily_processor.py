@@ -3,12 +3,15 @@ Module for processing daily weather station data into daily summary records.
 """
 
 import datetime
+import json
 import uuid
+import logging
 
 import pandas as pd
 import numpy as np
 
 from schema import WeatherStation, DailyRecord
+from database import Database
 
 
 class DailyProcessor:
@@ -36,7 +39,7 @@ class DailyProcessor:
         self.date = date
         self.run_id = run_id
 
-    def run(self) -> DailyRecord:
+    def _generate_record(self) -> DailyRecord:
         """
         Process the daily records and return a DailyRecord summary.
         Returns:
@@ -48,6 +51,16 @@ class DailyProcessor:
         max_temperature, min_temperature, avg_temperature = self.calculate_temperature()
         max_humidity, min_humidity, avg_humidity = self.calculate_humidity()
         total_rain = self.calculate_rain()
+
+        meta_construction_data = json.dumps(
+            {
+                "constructed_at_utc_unix": datetime.datetime.now().timestamp(),
+                "source_record_ids": self.records["wr_id"]
+                .dropna()
+                .astype(str)
+                .tolist(),
+            }
+        )
 
         return DailyRecord(
             dr_id=str(uuid.uuid4()),
@@ -63,13 +76,41 @@ class DailyProcessor:
             rain=total_rain,
             flagged=flagged,
             finished=True,
-            cook_run_id=self.run_id,
+            processor_thread_id=self.run_id,
             avg_temperature=avg_temperature,
             max_humidity=max_humidity,
             avg_humidity=avg_humidity,
             min_humidity=min_humidity,
             timezone=self.station.local_timezone,
+            meta_construction_data=meta_construction_data,
+            monthly_record_id=None,
         )
+
+    def _save_record(self, record: DailyRecord) -> None:
+        """
+        Save the DailyRecord to the database.
+        Args:
+            record (DailyRecord): The DailyRecord to save.
+        """
+        Database.save_daily_record(record)
+
+    def run(self) -> DailyRecord:
+        """
+        Process the daily records and save the DailyRecord summary.
+        Returns:
+            bool: True if processing was successful, otherwise False.
+        """
+        if len(self.records) == 0:
+            logging.warning("No records to process for date %s", self.date)
+            return None
+
+        try:
+            record = self._generate_record()
+            self._save_record(record)
+            return record
+        except Exception as e:
+            logging.error("Error processing daily record: %s", e)
+            return None
 
     def calculate_flagged(self) -> bool:
         """

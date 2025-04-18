@@ -175,7 +175,7 @@ class TestMonthlyProcessor(unittest.TestCase):
         self.assertEqual(result.station_id, self.station.ws_id)
         self.assertEqual(result.date, self.interval[0])
         self.assertTrue(result.finished)
-        self.assertEqual(result.cook_run_id, self.run_id)
+        self.assertEqual(result.processor_thread_id, self.run_id)
 
     # endregion
 

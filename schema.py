@@ -65,12 +65,14 @@ class DailyRecord:
     rain: float
     flagged: bool
     finished: bool
-    cook_run_id: uuid.UUID
+    processor_thread_id: uuid.UUID
     avg_temperature: float
     max_humidity: float
     avg_humidity: float
     min_humidity: float
     timezone: zoneinfo.ZoneInfo
+    monthly_record_id: uuid.UUID
+    meta_construction_data: str
 
 
 @dataclass
@@ -97,5 +99,18 @@ class MonthlyRecord:
     max_max_wind_gust: float
     min_min_pressure: float
     cumulative_rainfall: float
-    cook_run_id: uuid.UUID
+    processor_thread_id: uuid.UUID
     finished: bool = True
+
+
+@dataclass
+class ProcessorThread:
+    """
+    Represents a thread that processes weather data.
+    """
+
+    thread_id: uuid.UUID
+    thread_timestamp: datetime.datetime
+    command: str
+    start_interval_date: datetime.date
+    end_interval_date: datetime.date

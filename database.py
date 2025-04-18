@@ -14,7 +14,13 @@ from psycopg2 import pool
 from psycopg2.extensions import connection as _connection
 from psycopg2.extensions import cursor as _cursor
 
-from schema import DailyRecord, MonthlyRecord, WeatherStation, WeatherRecord
+from schema import (
+    DailyRecord,
+    MonthlyRecord,
+    WeatherStation,
+    WeatherRecord,
+    ProcessorThread,
+)
 
 
 class CursorFromConnectionFromPool:
@@ -134,7 +140,7 @@ class Database:
                 max_temperature, 
                 min_temperature, 
                 wind_gust, 
-                max_wind_gust
+                max_wind_gust,
             FROM weather_record
             WHERE station_id = %s AND source_timestamp >= %s AND source_timestamp <= %s
             ORDER BY source_timestamp asc
@@ -174,12 +180,14 @@ class Database:
                     rain, 
                     flagged, 
                     finished, 
-                    cook_run_id, 
+                    processor_thread_id, 
                     avg_temperature, 
                     max_humidity, 
                     avg_humidity, 
                     min_humidity,
-                    timezone
+                    timezone,
+                    monthly_record_id,
+                    meta_construction_data
                 FROM daily_record 
                 WHERE station_id = %s AND date >= %s AND date <= %s""",
                 (station_id, start_date, end_date),
@@ -192,6 +200,25 @@ class Database:
             return daily_records
 
     @classmethod
+    def set_monthly_record_id_for_daily_records(
+        cls, daily_record_ids: List[str], monthly_record_id: str
+    ) -> None:
+        """Set the monthly record ID for daily records in a specific date range."""
+
+        with CursorFromConnectionFromPool() as cursor:
+            cursor.execute(
+                """
+                UPDATE daily_record 
+                SET monthly_record_id = %s 
+                WHERE id IN %s
+                """,
+                (
+                    monthly_record_id,
+                    tuple(daily_record_ids),
+                ),
+            )
+
+    @classmethod
     def save_daily_record(cls, record: DailyRecord) -> None:
         """Save a daily record to the database."""
 
@@ -201,11 +228,12 @@ class Database:
                 INSERT INTO daily_record (
                     id, station_id, date, max_temperature, min_temperature, max_wind_gust, 
                     max_wind_speed, avg_wind_direction, max_pressure, min_pressure, rain, 
-                    flagged, finished, cook_run_id, avg_temperature, max_humidity, 
-                    avg_humidity, min_humidity, timezone
+                    flagged, finished, processor_thread_id, avg_temperature, max_humidity, 
+                    avg_humidity, min_humidity, timezone, monthly_record_id, meta_construction_data
                 )
                 SELECT 
-                    %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+                    %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 
+                    %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
                 WHERE NOT EXISTS (
                     SELECT 1 FROM daily_record
                     WHERE station_id = %s AND date = %s AND was_manually_edited = TRUE
@@ -224,12 +252,14 @@ class Database:
                     rain = EXCLUDED.rain,
                     flagged = EXCLUDED.flagged,
                     finished = EXCLUDED.finished,
-                    cook_run_id = EXCLUDED.cook_run_id,
+                    processor_thread_id = EXCLUDED.processor_thread_id,
                     avg_temperature = EXCLUDED.avg_temperature,
                     max_humidity = EXCLUDED.max_humidity,
                     avg_humidity = EXCLUDED.avg_humidity,
                     min_humidity = EXCLUDED.min_humidity,
-                    timezone = EXCLUDED.timezone
+                    timezone = EXCLUDED.timezone,
+                    monthly_record_id = EXCLUDED.monthly_record_id,
+                    meta_construction_data = EXCLUDED.meta_construction_data
                 """,
                 (
                     record.dr_id,
@@ -245,12 +275,14 @@ class Database:
                     record.rain,
                     record.flagged,
                     record.finished,
-                    record.cook_run_id,
+                    record.processor_thread_id,
                     record.avg_temperature,
                     record.max_humidity,
                     record.avg_humidity,
                     record.min_humidity,
                     str(record.timezone),
+                    record.monthly_record_id,
+                    record.meta_construction_data,
                     record.station_id,
                     record.date,
                 ),
@@ -268,7 +300,7 @@ class Database:
                     avg_avg_temperature, avg_humidity, avg_max_wind_gust, avg_pressure, 
                     max_max_temperature, min_min_temperature, max_max_humidity, 
                     min_min_humidity, max_max_pressure, min_min_pressure, cumulative_rainfall, 
-                    cook_run_id, finished, max_max_wind_gust
+                    processor_thread_id, finished, max_max_wind_gust
                 )
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 ON CONFLICT (station_id, date) DO UPDATE SET
@@ -288,7 +320,7 @@ class Database:
                     max_max_pressure = EXCLUDED.max_max_pressure,
                     min_min_pressure = EXCLUDED.min_min_pressure,
                     cumulative_rainfall = EXCLUDED.cumulative_rainfall,
-                    cook_run_id = EXCLUDED.cook_run_id,
+                    processor_thread_id = EXCLUDED.processor_thread_id,
                     finished = EXCLUDED.finished
                 """,
                 (
@@ -308,7 +340,7 @@ class Database:
                     record.max_max_pressure,
                     record.min_min_pressure,
                     record.cumulative_rainfall,
-                    record.cook_run_id,
+                    record.processor_thread_id,
                     record.finished,
                     record.max_max_wind_gust,
                 ),
@@ -325,6 +357,25 @@ class Database:
             timezones = [timezone[0] for timezone in cursor.fetchall()]
 
             return timezones
+
+    @classmethod
+    def save_processor_thread(cls, processor_thread: ProcessorThread) -> None:
+        """Save a processor thread to the database."""
+        with CursorFromConnectionFromPool() as cursor:
+            cursor.execute(
+                """
+                INSERT INTO processor_thread (id, thread_timestamp,
+                command, start_interval_date, end_interval_date)
+                VALUES (%s, %s, %s, %s, %s)
+                """,
+                (
+                    processor_thread.thread_id,
+                    processor_thread.thread_timestamp,
+                    processor_thread.command,
+                    processor_thread.start_interval_date,
+                    processor_thread.end_interval_date,
+                ),
+            )
 
 
 @contextmanager

@@ -191,7 +191,7 @@ class TestDailyProcessor(unittest.TestCase):
         self.assertEqual(result.station_id, self.station.ws_id)
         self.assertEqual(result.date, self.process_date)
         self.assertTrue(result.finished)
-        self.assertEqual(result.cook_run_id, self.run_id)
+        self.assertEqual(result.processor_thread_id, self.run_id)
 
     # endregion
 

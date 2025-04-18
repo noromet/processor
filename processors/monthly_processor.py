@@ -3,9 +3,12 @@ Monthly weather data processor for aggregating and summarizing weather station r
 """
 
 import uuid
+import logging
+
 import pandas as pd
 
 from schema import MonthlyRecord, WeatherStation
+from database import Database
 
 
 class MonthlyProcessor:
@@ -34,9 +37,9 @@ class MonthlyProcessor:
         self.records = records
         self.interval = interval
 
-    def run(self):
+    def _generate_record(self) -> MonthlyRecord:
         """
-        Process the monthly records and return a MonthlyRecord summary.
+        Generate the MonthlyRecord summary from the records.
 
         Returns:
             MonthlyRecord: Aggregated monthly weather data.
@@ -72,9 +75,48 @@ class MonthlyProcessor:
             max_max_pressure=max_max_pressure,
             min_min_pressure=min_min_pressure,
             cumulative_rainfall=cumulative_rainfall,
-            cook_run_id=self.run_id,
+            processor_thread_id=self.run_id,
             finished=True,
         )
+
+    def _save_record(self, record: MonthlyRecord) -> None:
+        """
+        Save the MonthlyRecord to the database.
+
+        Args:
+            record (MonthlyRecord): The MonthlyRecord to save.
+        """
+        Database.save_monthly_record(record)
+
+        record_ids = self.records["dr_id"].dropna().astype(str).tolist()
+
+        Database.set_monthly_record_id_for_daily_records(
+            daily_record_ids=record_ids,
+            monthly_record_id=record.mr_id,
+        )
+
+    def run(self) -> MonthlyRecord:
+        """
+        Process the monthly records and save the MonthlyRecord summary.
+
+        Returns:
+            bool: True if processing was successful, otherwise False.
+        """
+        if len(self.records) == 0:
+            logging.warning(
+                "No records to process for interval %s - %s",
+                self.interval[0],
+                self.interval[1],
+            )
+            return None
+
+        try:
+            record = self._generate_record()
+            self._save_record(record)
+            return record
+        except Exception as e:
+            logging.error("Error processing monthly record: %s", e)
+            return None
 
     def calculate_temperature(self) -> tuple:
         """
