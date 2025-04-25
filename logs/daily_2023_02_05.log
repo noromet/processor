@@ -1,0 +1,162 @@
+[2025-04-25 14:41:43,439] INFO: Connecting to database...[0m
+[2025-04-25 14:41:43,455] INFO: Connected to database.[0m
+[2025-04-25 14:41:43,455] INFO: Dry run enabled.[0m
+[2025-04-25 14:41:43,458] INFO: Scheduler initialized.[0m
+[2025-04-25 14:41:43,458] INFO: Processing date: 2023-02-05[0m
+[2025-04-25 14:41:43,459] INFO: Available timezones: ['Etc/UTC', 'Europe/Madrid', 'Europe/Lisbon'][0m
+[33m[2025-04-25 14:41:43,464] WARNING: No records found for station no_data on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,466] WARNING: No records found for station has_data on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,467] WARNING: No records found for station AA_Ecowitt on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,468] WARNING: No records found for station Coín Coto la Corcha on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,469] WARNING: No records found for station Espinosa de la Ribera on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,470] WARNING: No records found for station Collada de Aralla on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,471] WARNING: No records found for station Sotobañado y Priorato on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,473] WARNING: No records found for station Tavernes Valldigna - Sequers on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,474] WARNING: No records found for station Cerezales del Condado on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,475] WARNING: No records found for station Calzadilla de los Barros on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,476] WARNING: No records found for station Villena-La Encina on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,478] WARNING: No records found for station Villena- Cº S Juan on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,479] WARNING: No records found for station Santa Eulalia del Río Negro on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,480] WARNING: No records found for station Villanueva Valrojo on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,480] WARNING: No records found for station Culla D'Arcu on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,481] WARNING: No records found for station Pénjamo - Langreo on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,482] WARNING: No records found for station Piscifactoría Mundova on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,483] WARNING: No records found for station Marabio-Teverga on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,484] WARNING: No records found for station La Copa-Paraje la Monja on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,484] WARNING: No records found for station Macizo de Líbar on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,485] WARNING: No records found for station Caldevilla (Piloña) on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,486] WARNING: No records found for station Cobijón on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,487] WARNING: No records found for station Donostia Amara B. on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,488] WARNING: No records found for station Villaceid on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,488] WARNING: No records found for station Otero de Bodas on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,489] WARNING: No records found for station Senra on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,490] WARNING: No records found for station Villardeciervos  on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,491] WARNING: No records found for station AA_Meteoclimatic (El Entrego) on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,492] WARNING: No records found for station Molinaferrera on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,492] WARNING: No records found for station M. de las Ánimas on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,493] WARNING: No records found for station R. de Beniscornia on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,494] WARNING: No records found for station Villamanín on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,495] WARNING: No records found for station Sta. Mª Trassierra on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,496] WARNING: No records found for station La Matea on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,496] WARNING: No records found for station Cumbre de Pontones on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,497] WARNING: No records found for station Cubillas de Arbas on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,498] WARNING: No records found for station Prado Veneiro-Babia on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,499] WARNING: No records found for station Riopar on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,500] WARNING: No records found for station Cabreros del Río on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,500] WARNING: No records found for station Olea de Boedo on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,501] WARNING: No records found for station Garòs-Naut Aran on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,502] WARNING: No records found for station Nava de Arriba on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,503] WARNING: No records found for station Puerto Alto on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,504] WARNING: No records found for station IES Juan Enzina on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,504] WARNING: No records found for station Caborana on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,505] WARNING: No records found for station Estación de Cabra on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,506] WARNING: No records found for station Radio León on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,507] WARNING: No records found for station Blimea - La Venta on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,508] WARNING: No records found for station Cortijo de Tortas on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,508] WARNING: No records found for station La Balsa Alta on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,509] WARNING: No records found for station Xinzo de Limia on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,510] WARNING: No records found for station AA_Wunderground (San Emiliano (Allande)) on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,511] WARNING: No records found for station Fuentes de Ropel on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,512] WARNING: No records found for station Batán del Puerto on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,512] WARNING: No records found for station Mollet del Vallès Besós on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,513] WARNING: No records found for station Fuente la Sabina on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,514] WARNING: No records found for station Córdoba on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,515] WARNING: No records found for station Vega de Orce on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,516] WARNING: No records found for station Orce on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,516] WARNING: No records found for station Puebla D Fadrique on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,517] WARNING: No records found for station Villazala on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,518] WARNING: No records found for station Arenillas S Pelayo on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,519] WARNING: No records found for station Córdoba Poniente on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,520] WARNING: No records found for station Ferreras de Arriba on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,520] WARNING: No records found for station El Sahúco on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,522] WARNING: No records found for station Marratxí on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,523] WARNING: No records found for station Oviedo La Florida on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,524] WARNING: No records found for station Molleda,Corvera de Asturias on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,524] WARNING: No records found for station Cofiñal on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,525] WARNING: No records found for station Gillón, Cangas del Narcea on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,526] WARNING: No records found for station Pico La Llambria on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,527] WARNING: No records found for station Villaestrigo Páramo on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,528] WARNING: No records found for station San Andrés del R. on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,528] WARNING: No records found for station Degaña on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,529] WARNING: No records found for station Robledo de Babia on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,530] WARNING: No records found for station Vega de Baxo-Gijón on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,531] WARNING: No records found for station Istán on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,531] WARNING: No records found for station Lorenzana on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,532] WARNING: No records found for station Sª Oreganal (UGR) on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,533] WARNING: No records found for station Riofrío-La Devesa on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,534] WARNING: No records found for station Abelleira on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,535] WARNING: No records found for station Alozaina on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,535] WARNING: No records found for station Casa Campillero on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,536] WARNING: No records found for station Requejo de la Vega on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,537] WARNING: No records found for station Villanófar on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,538] WARNING: No records found for station Montaos on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,539] WARNING: No records found for station Tolox - Cta. Gallo on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,540] WARNING: No records found for station Rágama on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,541] WARNING: No records found for station Serranillos on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,541] WARNING: No records found for station Sª Palmitera (UGR) on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,542] WARNING: No records found for station La Nava (SªNieves) on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,543] WARNING: No records found for station Coin-San Roman on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,544] WARNING: No records found for station Chert/Xert on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,545] WARNING: No records found for station Navacillo (UGR) on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,546] WARNING: No records found for station Quiruelas Vidriales on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,546] WARNING: No records found for station Coin on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,547] WARNING: No records found for station Ronda on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,548] WARNING: No records found for station Astorga on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,549] WARNING: No records found for station Laguna Marquesado on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,549] WARNING: No records found for station Las Lagunas-Mijas Costa on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,550] WARNING: No records found for station Trobajo del Camino on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,551] WARNING: No records found for station Fuente Sta Cruz on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,552] WARNING: No records found for station Vega de Liordes on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,552] WARNING: No records found for station Logroño Centro on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,553] WARNING: No records found for station Donostia - Ibaeta on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,554] WARNING: No records found for station Isoba on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,554] WARNING: No records found for station Arboreto Valonsadero-Soria on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,555] WARNING: No records found for station Logroño Sur on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,556] WARNING: No records found for station La Peral-Somiedo on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,557] WARNING: No records found for station Sopeña de Curueño on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,557] WARNING: No records found for station Llanes on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,558] WARNING: No records found for station Justel on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,559] WARNING: No records found for station Camarzana de Tera on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,560] WARNING: No records found for station Campamento S Juan on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,561] WARNING: No records found for station Zafrilla on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,561] WARNING: No records found for station Lugueros on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,562] WARNING: No records found for station Burón on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,563] WARNING: No records found for station Veguellina on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,564] WARNING: No records found for station Villaquilambre on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,565] WARNING: No records found for station Islantilla Playa on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,565] WARNING: No records found for station Hoya Mollidar on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,566] WARNING: No records found for station La Veredilla-Aldea on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,567] WARNING: No records found for station Otero las Dueñas on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,568] WARNING: No records found for station Cañá Hermosa on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,569] WARNING: No records found for station Callejo de Ordás on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,570] WARNING: No records found for station La Foz - Casu on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,571] WARNING: No records found for station Pozo Romero on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,572] WARNING: No records found for station Sevilla-S Bernardo on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,573] WARNING: No records found for station Oteros de Boedo on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,574] WARNING: No records found for station Villarrodrigo  Regueras on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,575] WARNING: No records found for station Foncebadón on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,575] WARNING: No records found for station Caldevilla Valdeón on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,576] WARNING: No records found for station San Juan de Torres on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,576] WARNING: No records found for station Sojuela on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,576] WARNING: No records found for station Uztárroz/Uztarroze on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,576] WARNING: No records found for station La Copa-Campo Fútbol on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,577] WARNING: No records found for station Hospitalet-Bellvitge on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,577] WARNING: No records found for station Carbajal de la Legua on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,577] WARNING: No records found for station Casas de Alfaro-Rogativa on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,578] WARNING: No records found for station Begíjar on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,578] WARNING: No records found for station Casas de Don Juan on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,579] WARNING: No records found for station Villayuste on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,579] WARNING: No records found for station Pumalverde on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,580] WARNING: No records found for station San Martín de Grazanes on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,580] WARNING: No records found for station Fozara - Outeiro Fernando  on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,581] WARNING: No records found for station La Bañeza2 on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,582] WARNING: No records found for station El Oso on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,584] WARNING: No records found for station Barrio O Sisto - Dozón on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,585] WARNING: No records found for station Oviedo - Fozaneldi on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,586] WARNING: No records found for station Cascajeras (UGR) on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,586] WARNING: No records found for station AA_WeatherlinkV1 (Gusendos Oteros) on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,587] WARNING: No records found for station Filiel on date 2023-02-05[0m
+[33m[2025-04-25 14:41:43,587] WARNING: No records found for station Rute Pampanas on date 2023-02-05[0m
+[2025-04-25 14:41:43,587] INFO: Starting processing. Run ID: 1c2baaaf-6109-4131-832c-ed8c84c46e92[0m
+[2025-04-25 14:41:43,588] INFO: Processor done.[0m
+[2025-04-25 14:41:43,588] INFO: Database connections closed.[0m
