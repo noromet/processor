@@ -25,7 +25,7 @@ class WeatherRecord:
     Represents a single weather record from an exact point in time.
     """
 
-    wr_id: uuid.UUID
+    id: uuid.UUID
     station_id: uuid.UUID
     source_timestamp: datetime.datetime
     temperature: float
@@ -52,7 +52,7 @@ class DailyRecord:
     which is an aggregation of multiple WeatherRecord instances.
     """
 
-    dr_id: uuid.UUID
+    id: uuid.UUID
     station_id: uuid.UUID
     date: datetime.date
     max_temperature: float
@@ -82,7 +82,7 @@ class MonthlyRecord:
     which is an aggregation of multiple DailyRecord instances.
     """
 
-    mr_id: uuid.UUID
+    id: uuid.UUID
     station_id: uuid.UUID
     date: datetime.date
     avg_max_temperature: float

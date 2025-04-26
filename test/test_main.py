@@ -8,7 +8,7 @@ from unittest.mock import patch
 from datetime import date
 import zoneinfo
 
-from main import Scheduler, get_stations
+from main import Scheduler
 
 # silence logs
 logging.disable(logging.CRITICAL)
@@ -83,50 +83,3 @@ class TestScheduler(unittest.TestCase):
         self.assertEqual(start.month, 12)
         self.assertEqual(end.month, 12)
         self.assertEqual(end.day, 31)
-
-
-class TestGetStations(unittest.TestCase):
-    """Test cases for the get_stations utility function."""
-
-    @patch("main.Database.get_single_station")
-    def test_get_stations_by_id_found(self, mock_get_single_station):
-        """Test get_stations returns station when found by ID."""
-        mock_station = object()
-        mock_get_single_station.return_value = mock_station
-
-        result = get_stations(station_id="abc123")
-        self.assertEqual(result, [mock_station])
-        mock_get_single_station.assert_called_once_with("abc123")
-
-    @patch("main.Database.get_single_station")
-    def test_get_stations_by_id_not_found(self, mock_get_single_station):
-        """Test get_stations returns empty list when station not found by ID."""
-        mock_get_single_station.return_value = None
-
-        result = get_stations(station_id="notfound")
-        self.assertEqual(result, [])
-        mock_get_single_station.assert_called_once_with("notfound")
-
-    @patch("main.Database.get_all_stations")
-    def test_get_stations_all_found(self, mock_get_all_stations):
-        """Test get_stations returns all stations when requested."""
-        mock_stations = [object(), object()]
-        mock_get_all_stations.return_value = mock_stations
-
-        result = get_stations(all_stations=True)
-        self.assertEqual(result, mock_stations)
-        mock_get_all_stations.assert_called_once()
-
-    @patch("main.Database.get_all_stations")
-    def test_get_stations_all_none(self, mock_get_all_stations):
-        """Test get_stations returns empty list when no stations found."""
-        mock_get_all_stations.return_value = []
-
-        result = get_stations(all_stations=True)
-        self.assertEqual(result, [])
-        mock_get_all_stations.assert_called_once()
-
-    def test_get_stations_invalid_args(self):
-        """Test get_stations raises ValueError on invalid arguments."""
-        with self.assertRaises(ValueError):
-            get_stations()

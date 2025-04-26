@@ -158,143 +158,191 @@ class Scheduler:
 
 
 # region utils
-def get_stations(station_id: str | None = None, all_stations: bool = False):
-    """Retrieve stations by ID or all stations if requested."""
-    if station_id is not None:
-        station = Database.get_single_station(station_id)
-
-        if station is None:
-            logging.error("Station with ID %s not found.", station_id)
-            return []
-        return [station]
-
-    if all_stations:
-        stations = Database.get_all_stations()
-        if len(stations) == 0:
-            logging.error("No active stations found!")
-            return []
-        return stations
-
-    raise ValueError("Invalid station ID or all_stations flag.")
 
 
 # endregion
 
 
 # region main
-def main():
-    """Main entry point for weather record processing."""
-    args = get_args()
+class Main:
+    """Main class for weather record processing."""
 
-    config_logger(debug=args.dry_run)
+    def __init__(self):
+        args = get_args()
 
-    run_id = str(uuid.uuid4())
+        self.db_url = args.db_url
+        self.dry_run = args.dry_run
+        self.date = args.date
+        self.mode = args.mode
 
-    thread = ProcessorThread(
-        thread_id=run_id,
-        thread_timestamp=datetime.now(timezone.utc),
-        command=" ".join(os.sys.argv),
-        processed_date=args.date,
-    )
+        self.single_thread = args.single_thread
+        self.max_threads = args.max_threads
+        self.all_stations = args.all
+        self.station_id = args.id
 
-    with database_connection(args.db_url):
-        logging.info("Connected to database.")
+        self.run_id = str(uuid.uuid4())
+        self.thread = ProcessorThread(
+            thread_id=self.run_id,
+            thread_timestamp=datetime.now(timezone.utc),
+            command=" ".join(os.sys.argv),
+            processed_date=None,
+        )
 
-        if args.dry_run:
-            logging.info("Dry run enabled.")
-        else:
-            logging.warning("Dry run disabled.")
+        self.processing_queue = queue.Queue()
+        self.scheduler = Scheduler(self.date)
 
-        scheduler = Scheduler(args.date)
-        stations = get_stations(args.id, args.all)
-        processing_queue = queue.Queue()
+    def get_stations(self):
+        """Retrieve stations by ID or all stations if requested."""
+        station_id = self.station_id
+        all_stations = self.all_stations
 
-        match args.mode:
-            case "daily":
-                full_days_intervals = scheduler.get_full_day_intervals()
+        if station_id is not None:
+            station = Database.get_single_station(station_id)
 
-                for tz, interval in full_days_intervals.items():
-                    date_on_tz = interval[0].astimezone(tz).date()
-                    stations_for_tz = [
-                        station for station in stations if station.local_timezone == tz
-                    ]  # to avoid extra DB query
+            if station is None:
+                logging.error("Station with ID %s not found.", station_id)
+                return []
+            return [station]
 
-                    for station in stations_for_tz:
-                        records = Database.get_weather_records_for_station_and_interval(
-                            station_id=str(station.ws_id),
-                            date_from=interval[0],
-                            date_to=interval[1],
-                        )
+        if all_stations:
+            stations = Database.get_all_stations()
+            if len(stations) == 0:
+                logging.error("No active stations found!")
+                return []
+            return stations
 
-                        if len(records) == 0:
-                            logging.warning(
-                                "No records found for station %s on date %s",
-                                station.location,
-                                date_on_tz,
-                            )
-                            continue
+        raise ValueError("Invalid station ID or all_stations flag.")
 
-                        processing_queue.put(
-                            DailyProcessor(
-                                station=station,
-                                records=pd.DataFrame(records),
-                                date=date_on_tz,
-                                run_id=run_id,
-                            )
-                        )
+    def fill_up_daily_queue(self):
+        """
+        Fill up the processing queue with DailyProcessor instances for each station.
+        Each station's records are processed for the specified date.
+        """
+        full_days_intervals = self.scheduler.get_full_day_intervals()
 
-            case "monthly":
-                tz = zoneinfo.ZoneInfo("UTC")
+        for tz, interval in full_days_intervals.items():
+            date_on_tz = interval[0].astimezone(tz).date()
+            stations_for_tz = [
+                station
+                for station in self.get_stations()
+                if station.local_timezone == tz
+            ]  # to avoid extra DB query
 
-                month_interval = scheduler.get_month_interval()
+            for station in stations_for_tz:
+                records = Database.get_weather_records_for_station_and_interval(
+                    station_id=str(station.ws_id),
+                    date_from=interval[0],
+                    date_to=interval[1],
+                )
 
-                for station in stations:
-                    records = Database.get_daily_records_for_station_and_interval(
-                        station_id=str(station.ws_id),
-                        start_date=month_interval[0],
-                        end_date=month_interval[1],
+                if len(records) == 0:
+                    logging.warning(
+                        "No records found for station %s on date %s",
+                        station.location,
+                        date_on_tz,
                     )
+                    continue
 
-                    if len(records) == 0:
-                        logging.warning(
-                            "No daily records found for station %s in interval %s-%s",
-                            station.location,
-                            month_interval[0].date(),
-                            month_interval[1].date(),
-                        )
-                        continue
-
-                    processing_queue.put(
-                        MonthlyProcessor(
-                            station=station,
-                            records=pd.DataFrame(records),
-                            interval=month_interval,
-                            run_id=run_id,
-                        )
+                self.processing_queue.put(
+                    DailyProcessor(
+                        station=station,
+                        records=pd.DataFrame(records),
+                        date=date_on_tz,
+                        run_id=self.run_id,
                     )
+                )
 
-        logging.info("Starting processing. Run ID: %s", run_id)
+    def fill_up_monthly_queue(self):
+        """
+        Fill up the processing queue with MonthlyProcessor instances for each station.
+        Each station's records are processed for the specified month.
+        """
+        month_interval = self.scheduler.get_month_interval()
 
-        if not processing_queue.empty():
-            Database.save_processor_thread(thread)  # creating before the assignment
-            logging.info("Saved thread with id %s.", thread.thread_id)
+        for station in self.get_stations():
+            records = Database.get_daily_records_for_station_and_interval(
+                station_id=str(station.ws_id),
+                start_date=month_interval[0],
+                end_date=month_interval[1],
+            )
 
-        while not processing_queue.empty():
-            processor = processing_queue.get()
+            if len(records) == 0:
+                logging.warning(
+                    "No daily records found for station %s in interval %s-%s",
+                    station.location,
+                    month_interval[0].date(),
+                    month_interval[1].date(),
+                )
+                continue
+
+            self.processing_queue.put(
+                MonthlyProcessor(
+                    station=station,
+                    records=pd.DataFrame(records),
+                    interval=month_interval,
+                    run_id=self.run_id,
+                )
+            )
+
+    def process_queue(self):
+        """Process the records in the queue."""
+        while not self.processing_queue.empty():
+            processor = self.processing_queue.get()
             logging.info(
                 "Processing %s (%d records)",
                 processor.station.location,
                 len(processor.records),
             )
 
-            result = processor.run(args.dry_run)
+            result = processor.run(self.dry_run)
 
             if result:
                 logging.info("Successfully processed %s", processor.station.ws_id)
             else:
                 logging.error("Did not process %s", processor.station.ws_id)
 
-        logging.info("Processor done.")
+    def run(self):
+        """Main entry point for weather record processing."""
+
+        config_logger(debug=self.dry_run)
+
+        run_id = str(uuid.uuid4())
+
+        with database_connection(self.db_url):
+            logging.info("Connected to database.")
+
+            if self.dry_run:
+                logging.info("Dry run enabled.")
+            else:
+                logging.warning("Dry run disabled.")
+
+            match self.mode:
+                case "daily":
+                    self.fill_up_daily_queue()
+
+                case "monthly":
+                    self.fill_up_monthly_queue()
+
+            logging.info("Starting processing. Run ID: %s", run_id)
+
+            if not self.processing_queue.empty():
+                Database.save_processor_thread(
+                    self.thread
+                )  # creating before the assignment
+                logging.info("Saved thread with id %s.", self.thread.thread_id)
+
+                self.process_queue()
+
+            else:
+                logging.warning("No records to process.")
+
+            logging.info("Processor done.")
+
+
+def main():
+    """Main function to run the weather record processing."""
+    main_instance = Main()
+    main_instance.run()
 
 
 if __name__ == "__main__":

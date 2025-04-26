@@ -139,7 +139,7 @@ class Database:
 
         query = """
             SELECT 
-                id as wr_id, 
+                id, 
                 station_id, 
                 source_timestamp, 
                 temperature, 
@@ -183,7 +183,7 @@ class Database:
             cursor.execute(
                 """
                 SELECT 
-                    id as dr_id, 
+                    id as id, 
                     station_id, 
                     date, 
                     max_temperature, 
@@ -238,7 +238,7 @@ class Database:
     def save_daily_record(cls, record: DailyRecord) -> str:
         """Save a daily record to the database."""
 
-        record.dr_id = str(uuid.uuid4()) if record.dr_id is None else record.dr_id
+        record.id = str(uuid.uuid4()) if record.id is None else record.id
 
         with CursorFromConnectionFromPool() as cursor:
             cursor.execute(
@@ -280,7 +280,7 @@ class Database:
                 RETURNING id
                 """,
                 (
-                    record.dr_id,
+                    record.id,
                     record.station_id,
                     record.date,
                     record.max_temperature,
@@ -315,7 +315,7 @@ class Database:
                 return None
 
             record_id = fetched_record[0]
-            record.dr_id = record_id
+            record.id = record_id
             logging.info("Saved daily record with ID: %s", record_id)
             return record_id
 
@@ -323,7 +323,7 @@ class Database:
     def save_monthly_record(cls, record: MonthlyRecord) -> str:
         """Save a monthly record to the database."""
 
-        record.mr_id = str(uuid.uuid4()) if record.mr_id is None else record.mr_id
+        record.id = str(uuid.uuid4()) if record.id is None else record.id
 
         with CursorFromConnectionFromPool() as cursor:
             cursor.execute(
@@ -357,7 +357,7 @@ class Database:
                 RETURNING id
                 """,
                 (
-                    record.mr_id,
+                    record.id,
                     record.station_id,
                     record.date,
                     record.avg_max_temperature,
@@ -379,7 +379,7 @@ class Database:
                 ),
             )
             record_id = cursor.fetchone()[0]
-            record.mr_id = record_id
+            record.id = record_id
             logging.info("Saved monthly record with ID: %s", record_id)
             return record_id
 

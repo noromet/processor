@@ -53,15 +53,12 @@ class DailyProcessor:
 
         meta_construction_data = json.dumps(
             {
-                "source_record_ids": self.records["wr_id"]
-                .dropna()
-                .astype(str)
-                .tolist(),
+                "source_record_ids": self.records["id"].dropna().astype(str).tolist(),
             }
         )
 
         return DailyRecord(
-            dr_id=None,
+            id=None,
             station_id=str(self.station.ws_id),
             date=self.date,
             max_temperature=max_temperature,

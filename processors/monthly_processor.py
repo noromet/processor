@@ -57,7 +57,7 @@ class MonthlyProcessor:
         max_max_humidity, min_min_humidity, avg_humidity = self.calculate_humidity()
 
         return MonthlyRecord(
-            mr_id=None,
+            id=None,
             station_id=str(self.station.ws_id),
             date=self.interval[0],
             avg_max_temperature=avg_max_temperature,
@@ -85,7 +85,7 @@ class MonthlyProcessor:
         Args:
             record (MonthlyRecord): The MonthlyRecord to save.
         """
-        record_ids = self.records["dr_id"].dropna().astype(str).tolist()
+        record_ids = self.records["id"].dropna().astype(str).tolist()
 
         with Database.transaction():  # otherwise, FK is broken
             monthly_record_id = Database.save_monthly_record(record)
@@ -112,7 +112,6 @@ class MonthlyProcessor:
                 self._save_record(record)
             else:
                 logging.debug("Record not saved: %s", str(record.__dict__))
-
             return record
         except Exception as e:
             logging.error("Error processing monthly record: %s", e)

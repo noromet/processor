@@ -9,6 +9,7 @@ import pandas as pd
 import numpy as np
 
 from processors.monthly_processor import MonthlyProcessor
+from schema import MonthlyRecord
 
 
 class DummyStation:
@@ -171,7 +172,10 @@ class TestMonthlyProcessor(unittest.TestCase):
             avg_humidity=[60, 65],
         )
         proc = MonthlyProcessor(self.station, df, self.interval, self.run_id)
-        result = proc.run()
+        result = proc.run(dry_run=True)
+
+        self.assertIsInstance(result, MonthlyRecord)
+
         self.assertEqual(result.station_id, self.station.ws_id)
         self.assertEqual(result.date, self.interval[0])
         self.assertTrue(result.finished)

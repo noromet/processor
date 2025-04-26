@@ -8,6 +8,7 @@ import pandas as pd
 import numpy as np
 
 from processors.daily_processor import DailyProcessor
+from schema import DailyRecord
 
 
 class DummyStation:
@@ -173,6 +174,7 @@ class TestDailyProcessor(unittest.TestCase):
     def test_run_returns_daily_record(self):
         """Test run returns a daily record with correct attributes."""
         df = self.make_df(
+            id=[1, 2],
             flagged=[False, False],
             pressure=[1010, 1020],
             wind_speed=[2, 5],
@@ -187,7 +189,10 @@ class TestDailyProcessor(unittest.TestCase):
             humidity=[40, 60],
         )
         proc = DailyProcessor(self.station, df, self.process_date, self.run_id)
-        result = proc.run()
+        result = proc.run(dry_run=True)
+
+        self.assertIsInstance(result, DailyRecord)
+
         self.assertEqual(result.station_id, self.station.ws_id)
         self.assertEqual(result.date, self.process_date)
         self.assertTrue(result.finished)
