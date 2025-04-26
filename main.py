@@ -15,7 +15,7 @@ import pandas as pd
 from dotenv import load_dotenv
 
 from log import config_logger
-from processors import DailyProcessor, MonthlyProcessor
+from processors import Processor, DailyProcessor, MonthlyProcessor
 from database import Database, database_connection
 from schema import ProcessorThread
 
@@ -179,11 +179,12 @@ class Main:
             thread_id=self.run_id,
             thread_timestamp=datetime.now(timezone.utc),
             command=" ".join(os.sys.argv),
-            processed_date=None,
+            processed_date=self.date,
         )
 
+        self.scheduler = None  # needs db connection, so it's created later
         self.processing_queue = queue.Queue()
-        self.scheduler = Scheduler(self.date)
+        config_logger(debug=self.dry_run)
 
     def get_stations(self):
         """Retrieve stations by ID or all stations if requested."""
@@ -288,6 +289,10 @@ class Main:
                 len(processor.records),
             )
 
+            if not isinstance(processor, Processor):
+                logging.error("Processor is not of type Processor.")
+                continue
+
             result = processor.run(self.dry_run)
 
             if result:
@@ -297,12 +302,9 @@ class Main:
 
     def run(self):
         """Main entry point for weather record processing."""
-
-        config_logger(debug=self.dry_run)
-
-        run_id = str(uuid.uuid4())
-
         with database_connection(self.db_url):
+            self.scheduler = Scheduler(self.date)
+
             logging.info("Connected to database.")
 
             if self.dry_run:
@@ -317,7 +319,7 @@ class Main:
                 case "monthly":
                     self.fill_up_monthly_queue()
 
-            logging.info("Starting processing. Run ID: %s", run_id)
+            logging.info("Starting processing. Run ID: %s", self.run_id)
 
             if not self.processing_queue.empty():
                 Database.save_processor_thread(
