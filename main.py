@@ -157,12 +157,6 @@ class Scheduler:
 # endregion
 
 
-# region utils
-
-
-# endregion
-
-
 # region main
 class Main:
     """Main class for weather record processing."""

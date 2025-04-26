@@ -8,9 +8,10 @@ import pandas as pd
 
 from schema import MonthlyRecord, WeatherStation
 from database import Database
+from processors.processor import Processor
 
 
-class MonthlyProcessor:
+class MonthlyProcessor(Processor):
     """
     Processes a month's worth of weather data for a given weather station and interval.
     """
@@ -31,9 +32,7 @@ class MonthlyProcessor:
             interval (tuple): Tuple representing the date interval (start, end).
             run_id (str): Unique identifier for the processing run.
         """
-        self.run_id = run_id
-        self.station = station
-        self.records = records
+        super().__init__(station=station, records=records, run_id=run_id)
         self.interval = interval
 
     def _generate_record(self) -> MonthlyRecord:

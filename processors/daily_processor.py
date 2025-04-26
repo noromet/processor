@@ -11,9 +11,10 @@ import numpy as np
 
 from schema import WeatherStation, DailyRecord
 from database import Database
+from processors.processor import Processor
 
 
-class DailyProcessor:
+class DailyProcessor(Processor):
     """
     Processes raw weather station records for a single day into a DailyRecord summary.
     """
@@ -33,10 +34,8 @@ class DailyProcessor:
             date (datetime.date): The date for which to process records.
             run_id (str): Unique identifier for this processing run.
         """
-        self.station = station
-        self.records = records
+        super().__init__(station=station, records=records, run_id=run_id)
         self.date = date
-        self.run_id = run_id
 
     def _generate_record(self) -> DailyRecord:
         """

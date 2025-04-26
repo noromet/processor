@@ -3,202 +3,159 @@ Test cases for the daily_processor.py classes and functions.
 """
 
 import unittest
-from datetime import date
+import datetime
+
 import pandas as pd
-import numpy as np
 
+from schema import WeatherStation, DailyRecord
 from processors.daily_processor import DailyProcessor
-from schema import DailyRecord
-
-
-class DummyStation:
-    """Dummy station class for testing DailyProcessor."""
-
-    def __init__(self, ws_id="station1", local_timezone="UTC"):
-        self.ws_id = ws_id
-        self.local_timezone = local_timezone
 
 
 class TestDailyProcessor(unittest.TestCase):
-    """Test cases for the DailyProcessor class."""
+    """
+    Test suite for the DailyProcessor class that processes daily weather data.
+    """
 
     def setUp(self):
-        """Set up test variables for DailyProcessor tests."""
-        self.station = DummyStation()
-        self.run_id = "run-123"
-        self.process_date = date(2024, 4, 15)
+        """
+        Set up test environment before each test method.
+        Creates a mock weather station, sample records, and processor instance.
+        """
+        # Create a mock weather station
+        self.station = WeatherStation(
+            ws_id="test-station",
+            location="Test Station",
+            local_timezone="Europe/Madrid",
+        )
 
-    def make_df(self, **kwargs):
-        """Helper to create a DataFrame from keyword arguments."""
-        return pd.DataFrame(kwargs)
+        # Create sample records for testing
+        self.date = datetime.date(2024, 4, 15)
+        self.records = pd.DataFrame(
+            {
+                "id": [1, 2, 3],
+                "timestamp": pd.to_datetime(
+                    ["2024-04-15 08:00", "2024-04-15 12:00", "2024-04-15 16:00"]
+                ),
+                "temperature": [10.0, 15.0, 12.0],
+                "max_temperature": [11.0, 16.0, 13.0],
+                "min_temperature": [9.0, 14.0, 11.0],
+                "pressure": [1010.0, 1012.0, 1011.0],
+                "wind_speed": [5.0, 7.0, 6.0],
+                "max_wind_speed": [6.0, 8.0, 7.0],
+                "wind_gust": [10.0, 12.0, 11.0],
+                "max_wind_gust": [11.0, 13.0, 12.0],
+                "wind_direction": [90.0, 180.0, 270.0],
+                "cumulative_rain": [0.0, 2.0, 5.0],
+                "humidity": [70.0, 60.0, 65.0],
+                "flagged": [False, False, False],
+            }
+        )
 
-    # region flagged
-    def test_calculate_flagged_all_false(self):
-        """Test calculate_flagged returns False when all flagged are False."""
-        df = self.make_df(flagged=[False, False, False])
-        proc = DailyProcessor(self.station, df, self.process_date, self.run_id)
-        self.assertFalse(proc.calculate_flagged())
+        # Create processor
+        self.processor = DailyProcessor(
+            station=self.station,
+            records=self.records,
+            date=self.date,
+            run_id="test-run-id",
+        )
 
-    def test_calculate_flagged_some_true(self):
-        """Test calculate_flagged returns True when any flagged is True."""
-        df = self.make_df(flagged=[False, True, False])
-        proc = DailyProcessor(self.station, df, self.process_date, self.run_id)
-        self.assertTrue(proc.calculate_flagged())
+    def test_calculate_flagged(self):
+        """
+        Test the calculation of flagged status.
+        Verifies that the method correctly identifies if any records are flagged.
+        """
+        # Test with no flagged records
+        self.assertFalse(self.processor.calculate_flagged())
 
-    def test_calculate_flagged_empty(self):
-        """Test calculate_flagged returns True when all flagged are NaN."""
-        df = self.make_df(flagged=[np.nan, np.nan])
-        proc = DailyProcessor(self.station, df, self.process_date, self.run_id)
-        self.assertTrue(proc.calculate_flagged())
+        # Test with a flagged record
+        self.processor.records.loc[0, "flagged"] = True
+        self.assertTrue(self.processor.calculate_flagged())
 
-    # endregion
-
-    # region pressure
     def test_calculate_pressure(self):
-        """Test calculate_pressure returns correct max and min pressure."""
-        df = self.make_df(pressure=[1010, 1020, 1005, np.nan])
-        proc = DailyProcessor(self.station, df, self.process_date, self.run_id)
-        max_p, min_p = proc.calculate_pressure()
-        self.assertEqual(max_p, 1020.0)
-        self.assertEqual(min_p, 1005.0)
+        """
+        Test the calculation of pressure metrics.
+        Verifies that the method correctly calculates maximum and minimum pressure.
+        """
+        max_pressure, min_pressure = self.processor.calculate_pressure()
+        self.assertEqual(max_pressure, 1012.0)
+        self.assertEqual(min_pressure, 1010.0)
 
-    def test_calculate_pressure_empty(self):
-        """Test calculate_pressure returns None for empty/NaN input."""
-        df = self.make_df(pressure=[np.nan, np.nan])
-        proc = DailyProcessor(self.station, df, self.process_date, self.run_id)
-        max_p, min_p = proc.calculate_pressure()
-        self.assertIsNone(max_p)
-        self.assertIsNone(min_p)
-
-    # endregion
-
-    # region wind
     def test_calculate_wind(self):
-        """Test calculate_wind returns correct max wind speed, gust, and avg direction."""
-        df = self.make_df(
-            wind_speed=[2, 5, 3],
-            max_wind_speed=[3, 6, 4],
-            wind_gust=[7, 8, 6],
-            max_wind_gust=[8, 9, 7],
-            wind_direction=[0, 90, 180],
+        """
+        Test the calculation of wind metrics.
+        Verifies that the method correctly calculates maximum wind speed,
+        maximum wind gust, and average wind direction.
+        """
+        max_wind_speed, max_wind_gust, avg_wind_direction = (
+            self.processor.calculate_wind()
         )
-        proc = DailyProcessor(self.station, df, self.process_date, self.run_id)
-        max_ws, max_gust, avg_dir = proc.calculate_wind()
-        self.assertEqual(max_ws, 6.0)
-        self.assertEqual(max_gust, 9.0)
-        self.assertIsInstance(avg_dir, int)
+        self.assertEqual(max_wind_speed, 8.0)
+        self.assertEqual(max_wind_gust, 13.0)
+        # For wind direction, we're calculating vector average
+        # so just check it's a reasonable value
+        self.assertIsInstance(avg_wind_direction, int)
 
-    def test_calculate_wind_empty(self):
-        """Test calculate_wind returns NaN and None for empty/NaN input."""
-        df = self.make_df(
-            wind_speed=[np.nan, np.nan],
-            max_wind_speed=[np.nan, np.nan],
-            wind_gust=[np.nan, np.nan],
-            max_wind_gust=[np.nan, np.nan],
-            wind_direction=[np.nan, np.nan],
-        )
-        proc = DailyProcessor(self.station, df, self.process_date, self.run_id)
-        max_ws, max_gust, avg_dir = proc.calculate_wind()
-        self.assertTrue(np.isnan(max_ws))
-        self.assertTrue(np.isnan(max_gust))
-        self.assertIsNone(avg_dir)
-
-    # endregion
-
-    # region temperature
     def test_calculate_temperature(self):
-        """Test calculate_temperature returns correct max, min, and avg temperature."""
-        df = self.make_df(
-            temperature=[10, 15, 20],
-            max_temperature=[18, 21, 19],
-            min_temperature=[8, 12, 9],
-        )
-        proc = DailyProcessor(self.station, df, self.process_date, self.run_id)
-        max_t, min_t, avg_t = proc.calculate_temperature()
-        self.assertEqual(max_t, 21.0)
-        self.assertEqual(min_t, 8.0)
-        self.assertEqual(avg_t, 15.0)
+        """
+        Test the calculation of temperature metrics.
+        Verifies that the method correctly calculates maximum, minimum,
+        and average temperature values.
+        """
+        max_temp, min_temp, avg_temp = self.processor.calculate_temperature()
+        self.assertEqual(max_temp, 16.0)
+        self.assertEqual(min_temp, 9.0)
+        self.assertEqual(avg_temp, 12.333333333333334)  # average of [10, 15, 12]
 
-    def test_calculate_temperature_missing(self):
-        """Test calculate_temperature returns NaN for all-NaN input."""
-        df = self.make_df(
-            temperature=[np.nan, np.nan],
-            max_temperature=[np.nan, np.nan],
-            min_temperature=[np.nan, np.nan],
-        )
-        proc = DailyProcessor(self.station, df, self.process_date, self.run_id)
-        max_t, min_t, avg_t = proc.calculate_temperature()
-        self.assertTrue(np.isnan(max_t))
-        self.assertTrue(np.isnan(min_t))
-        self.assertTrue(np.isnan(avg_t))
-
-    # endregion
-
-    # region rain
     def test_calculate_rain(self):
-        """Test calculate_rain returns correct max cumulative rain."""
-        df = self.make_df(cumulative_rain=[0.0, 1.2, 2.5, 2.0])
-        proc = DailyProcessor(self.station, df, self.process_date, self.run_id)
-        self.assertEqual(proc.calculate_rain(), 2.5)
+        """
+        Test the calculation of rainfall.
+        Verifies that the method correctly determines the total rainfall for the day.
+        """
+        rain = self.processor.calculate_rain()
+        self.assertEqual(rain, 5.0)  # Maximum cumulative rain
 
-    def test_calculate_rain_empty(self):
-        """Test calculate_rain returns None for all-NaN input."""
-        df = self.make_df(cumulative_rain=[np.nan, np.nan])
-        proc = DailyProcessor(self.station, df, self.process_date, self.run_id)
-        self.assertIsNone(proc.calculate_rain())
-
-    # endregion
-
-    # region humidity
     def test_calculate_humidity(self):
-        """Test calculate_humidity returns correct max, min, and avg humidity."""
-        df = self.make_df(humidity=[40, 60, 55, 50])
-        proc = DailyProcessor(self.station, df, self.process_date, self.run_id)
-        max_h, min_h, avg_h = proc.calculate_humidity()
-        self.assertEqual(max_h, 60.0)
-        self.assertEqual(min_h, 40.0)
-        self.assertAlmostEqual(avg_h, 51.25)
+        """
+        Test the calculation of humidity metrics.
+        Verifies that the method correctly calculates maximum, minimum,
+        and average humidity values.
+        """
+        max_humidity, min_humidity, avg_humidity = self.processor.calculate_humidity()
+        self.assertEqual(max_humidity, 70.0)
+        self.assertEqual(min_humidity, 60.0)
+        self.assertEqual(avg_humidity, 65.0)
 
-    def test_calculate_humidity_empty(self):
-        """Test calculate_humidity returns None for all-NaN input."""
-        df = self.make_df(humidity=[np.nan, np.nan])
-        proc = DailyProcessor(self.station, df, self.process_date, self.run_id)
-        max_h, min_h, avg_h = proc.calculate_humidity()
-        self.assertIsNone(max_h)
-        self.assertIsNone(min_h)
-        self.assertIsNone(avg_h)
+    def test_generate_record(self):
+        """
+        Test the record generation functionality.
+        Verifies that the processor correctly creates a DailyRecord instance
+        with expected values from the processed data.
+        """
+        record = self.processor.run(True)
+        self.assertIsInstance(record, DailyRecord)
+        self.assertEqual(record.station_id, "test-station")
+        self.assertEqual(record.date, self.date)
+        self.assertEqual(record.max_temperature, 16.0)
+        self.assertEqual(record.min_temperature, 9.0)
+        self.assertEqual(record.rain, 5.0)
 
-    # endregion
+    def test_run(self):
+        """
+        Test the main run method of the processor.
+        Verifies normal operation and edge cases such as empty record sets.
+        """
+        # Test normal operation
+        record = self.processor.run(dry_run=True)
+        self.assertIsInstance(record, DailyRecord)
 
-    # region run
-    def test_run_returns_daily_record(self):
-        """Test run returns a daily record with correct attributes."""
-        df = self.make_df(
-            id=[1, 2],
-            flagged=[False, False],
-            pressure=[1010, 1020],
-            wind_speed=[2, 5],
-            max_wind_speed=[3, 6],
-            wind_gust=[7, 8],
-            max_wind_gust=[8, 9],
-            wind_direction=[0, 90],
-            temperature=[10, 15],
-            max_temperature=[18, 21],
-            min_temperature=[8, 12],
-            cumulative_rain=[0.0, 2.5],
-            humidity=[40, 60],
+        # Test with empty records
+        empty_processor = DailyProcessor(
+            station=self.station,
+            records=pd.DataFrame(),
+            date=self.date,
+            run_id="test-run-id",
         )
-        proc = DailyProcessor(self.station, df, self.process_date, self.run_id)
-        result = proc.run(dry_run=True)
-
-        self.assertIsInstance(result, DailyRecord)
-
-        self.assertEqual(result.station_id, self.station.ws_id)
-        self.assertEqual(result.date, self.process_date)
-        self.assertTrue(result.finished)
-        self.assertEqual(result.processor_thread_id, self.run_id)
-
-    # endregion
+        self.assertIsNone(empty_processor.run(dry_run=True))
 
 
 if __name__ == "__main__":

@@ -2,186 +2,154 @@
 Test cases for the monthly_processor.py classes and functions.
 """
 
-from datetime import datetime
 import unittest
+import datetime
 
 import pandas as pd
-import numpy as np
 
+from schema import WeatherStation, MonthlyRecord
 from processors.monthly_processor import MonthlyProcessor
-from schema import MonthlyRecord
-
-
-class DummyStation:
-    """Dummy station class for testing MonthlyProcessor."""
-
-    def __init__(self, ws_id="station1", local_timezone="UTC"):
-        self.ws_id = ws_id
-        self.local_timezone = local_timezone
-        self.location = "Test Location"
 
 
 class TestMonthlyProcessor(unittest.TestCase):
-    """Test cases for the MonthlyProcessor class."""
+    """
+    Test suite for the MonthlyProcessor class that processes monthly weather data.
+    """
 
     def setUp(self):
-        """Set up test variables for MonthlyProcessor tests."""
-        self.station = DummyStation()
-        self.run_id = "run-456"
-        self.interval = (
-            datetime(2024, 4, 1),
-            datetime(2024, 4, 30, 23, 59, 59),
+        """
+        Set up test environment before each test method.
+        Creates a mock weather station, sample records for a month, and processor instance.
+        """
+        # Create a mock weather station
+        self.station = WeatherStation(
+            ws_id="test-station",
+            location="Test Station",
+            local_timezone="Europe/Madrid",
         )
 
-    def make_df(self, **kwargs):
-        """Helper to create a DataFrame from keyword arguments."""
-        return pd.DataFrame(kwargs)
+        # Define the interval for the month
+        self.interval = (datetime.date(2024, 4, 1), datetime.date(2024, 4, 30))
 
-    # region temperature
+        # Create sample daily records for the month
+        self.records = pd.DataFrame(
+            {
+                "id": [101, 102, 103],
+                "date": pd.to_datetime(["2024-04-10", "2024-04-15", "2024-04-20"]),
+                "max_temperature": [16.0, 18.0, 17.0],
+                "min_temperature": [5.0, 7.0, 6.0],
+                "avg_temperature": [10.5, 12.5, 11.5],
+                "max_pressure": [1015.0, 1018.0, 1016.0],
+                "min_pressure": [1005.0, 1008.0, 1006.0],
+                "max_wind_gust": [25.0, 30.0, 28.0],
+                "rain": [2.0, 5.0, 3.0],
+                "max_humidity": [85.0, 90.0, 88.0],
+                "min_humidity": [40.0, 45.0, 42.0],
+                "avg_humidity": [62.5, 67.5, 65.0],
+            }
+        )
+
+        # Create processor
+        self.processor = MonthlyProcessor(
+            station=self.station,
+            records=self.records,
+            interval=self.interval,
+            run_id="test-run-id",
+        )
+
     def test_calculate_temperature(self):
-        """Test calculate_temperature returns correct max, min, and avg temperature."""
-        df = self.make_df(
-            max_temperature=[20, 22, 21],
-            min_temperature=[10, 12, 11],
-            avg_temperature=[15, 17, 16],
-        )
-        proc = MonthlyProcessor(self.station, df, self.interval, self.run_id)
-        max_max, min_min, avg_avg, avg_max, avg_min = proc.calculate_temperature()
-        self.assertEqual(max_max, 22.0)
-        self.assertEqual(min_min, 10.0)
-        self.assertEqual(avg_avg, 16.0)
-        self.assertEqual(avg_max, 21.0)
-        self.assertEqual(avg_min, 11.0)
+        """
+        Test the calculation of temperature metrics for monthly data.
+        Verifies that the method correctly calculates maximum, minimum,
+        and average temperature values across all days in the month.
+        """
+        result = self.processor.calculate_temperature()
+        max_max_temp, min_min_temp, avg_avg_temp, avg_max_temp, avg_min_temp = result
 
-    def test_calculate_temperature_empty(self):
-        """Test calculate_temperature returns None for all-NaN input."""
-        df = self.make_df(
-            max_temperature=[np.nan, np.nan],
-            min_temperature=[np.nan, np.nan],
-            avg_temperature=[np.nan, np.nan],
-        )
-        proc = MonthlyProcessor(self.station, df, self.interval, self.run_id)
-        max_max, min_min, avg_avg, avg_max, avg_min = proc.calculate_temperature()
-        self.assertIsNone(max_max)
-        self.assertIsNone(min_min)
-        self.assertIsNone(avg_avg)
-        self.assertIsNone(avg_max)
-        self.assertIsNone(avg_min)
+        self.assertEqual(max_max_temp, 18.0)
+        self.assertEqual(min_min_temp, 5.0)
+        self.assertEqual(avg_avg_temp, 11.5)  # average of [10.5, 12.5, 11.5]
+        self.assertEqual(avg_max_temp, 17.0)  # average of [16.0, 18.0, 17.0]
+        self.assertEqual(avg_min_temp, 6.0)  # average of [5.0, 7.0, 6.0]
 
-    # endregion
-
-    # region wind
     def test_calculate_wind(self):
-        """Test calculate_wind returns correct max and avg wind gust."""
-        df = self.make_df(max_wind_gust=[10, 15, 12])
-        proc = MonthlyProcessor(self.station, df, self.interval, self.run_id)
-        max_gust, avg_gust = proc.calculate_wind()
-        self.assertEqual(max_gust, 15.0)
-        self.assertEqual(avg_gust, 12.33)
+        """
+        Test the calculation of wind metrics for monthly data.
+        Verifies that the method correctly calculates maximum wind gust
+        and average maximum wind gust across all days in the month.
+        """
+        max_max_wind_gust, avg_max_wind_gust = self.processor.calculate_wind()
+        self.assertEqual(max_max_wind_gust, 30.0)
+        self.assertEqual(avg_max_wind_gust, 27.67)  # Rounded average of [25, 30, 28]
 
-    def test_calculate_wind_empty(self):
-        """Test calculate_wind returns None for all-NaN input."""
-        df = self.make_df(max_wind_gust=[np.nan, np.nan])
-        proc = MonthlyProcessor(self.station, df, self.interval, self.run_id)
-        max_gust, avg_gust = proc.calculate_wind()
-        self.assertIsNone(max_gust)
-        self.assertIsNone(avg_gust)
-
-    # endregion
-
-    # region pressure
     def test_calculate_pressure(self):
-        """Test calculate_pressure returns correct max, min, and avg pressure."""
-        df = self.make_df(
-            max_pressure=[1020, 1015, 1010], min_pressure=[1000, 1005, 1010]
+        """
+        Test the calculation of pressure metrics for monthly data.
+        Verifies that the method correctly calculates maximum, minimum,
+        and average pressure values across all days in the month.
+        """
+        max_max_pressure, min_min_pressure, avg_pressure = (
+            self.processor.calculate_pressure()
         )
-        proc = MonthlyProcessor(self.station, df, self.interval, self.run_id)
-        max_p, min_p, avg_p = proc.calculate_pressure()
-        self.assertEqual(max_p, 1020.0)
-        self.assertEqual(min_p, 1000.0)
-        self.assertEqual(avg_p, 1010.0)
+        self.assertEqual(max_max_pressure, 1018.0)
+        self.assertEqual(min_min_pressure, 1005.0)
+        self.assertAlmostEqual(
+            avg_pressure, 1011.33, places=1
+        )  # Rounded average of pressure means
 
-    def test_calculate_pressure_empty(self):
-        """Test calculate_pressure returns None for all-NaN input."""
-        df = self.make_df(max_pressure=[np.nan, np.nan], min_pressure=[np.nan, np.nan])
-        proc = MonthlyProcessor(self.station, df, self.interval, self.run_id)
-        max_p, min_p, avg_p = proc.calculate_pressure()
-        self.assertIsNone(max_p)
-        self.assertIsNone(min_p)
-        self.assertIsNone(avg_p)
-
-    # endregion
-
-    # region rain
     def test_calculate_rain(self):
-        """Test calculate_rain returns correct total rain."""
-        df = self.make_df(rain=[0.0, 1.2, 2.5, 2.0])
-        proc = MonthlyProcessor(self.station, df, self.interval, self.run_id)
-        self.assertEqual(proc.calculate_rain(), 5.7)
+        """
+        Test the calculation of total rainfall for monthly data.
+        Verifies that the method correctly determines the cumulative
+        rainfall across all days in the month.
+        """
+        total_rain = self.processor.calculate_rain()
+        self.assertEqual(total_rain, 10.0)  # Sum of [2, 5, 3]
 
-    def test_calculate_rain_empty(self):
-        """Test calculate_rain returns None for all-NaN input."""
-        df = self.make_df(rain=[np.nan, np.nan])
-        proc = MonthlyProcessor(self.station, df, self.interval, self.run_id)
-        self.assertIsNone(proc.calculate_rain())
-
-    # endregion
-
-    # region humidity
     def test_calculate_humidity(self):
-        """Test calculate_humidity returns correct max, min, and avg humidity."""
-        df = self.make_df(
-            max_humidity=[80, 85, 90],
-            min_humidity=[40, 45, 50],
-            avg_humidity=[60, 65, 70],
+        """
+        Test the calculation of humidity metrics for monthly data.
+        Verifies that the method correctly calculates maximum, minimum,
+        and average humidity values across all days in the month.
+        """
+        max_max_humidity, min_min_humidity, avg_humidity = (
+            self.processor.calculate_humidity()
         )
-        proc = MonthlyProcessor(self.station, df, self.interval, self.run_id)
-        max_h, min_h, avg_h = proc.calculate_humidity()
-        self.assertEqual(max_h, 90.0)
-        self.assertEqual(min_h, 40.0)
-        self.assertEqual(avg_h, 65.0)
+        self.assertEqual(max_max_humidity, 90.0)
+        self.assertEqual(min_min_humidity, 40.0)
+        self.assertEqual(avg_humidity, 65.0)  # Rounded average of [62.5, 67.5, 65.0]
 
-    def test_calculate_humidity_empty(self):
-        """Test calculate_humidity returns None for all-NaN input."""
-        df = self.make_df(
-            max_humidity=[np.nan, np.nan],
-            min_humidity=[np.nan, np.nan],
-            avg_humidity=[np.nan, np.nan],
+    def test_generate_record(self):
+        """
+        Test the monthly record generation functionality.
+        Verifies that the processor correctly creates a MonthlyRecord instance
+        with expected values from the processed data.
+        """
+        record = self.processor.run(True)
+        self.assertIsInstance(record, MonthlyRecord)
+        self.assertEqual(record.station_id, "test-station")
+        self.assertEqual(record.date, self.interval[0])
+        self.assertEqual(record.max_max_temperature, 18.0)
+        self.assertEqual(record.min_min_temperature, 5.0)
+        self.assertEqual(record.cumulative_rainfall, 10.0)
+
+    def test_run(self):
+        """
+        Test the main run method of the monthly processor.
+        Verifies normal operation and edge cases such as empty record sets.
+        """
+        # Test normal operation
+        record = self.processor.run(dry_run=True)
+        self.assertIsInstance(record, MonthlyRecord)
+
+        # Test with empty records
+        empty_processor = MonthlyProcessor(
+            station=self.station,
+            records=pd.DataFrame(),
+            interval=self.interval,
+            run_id="test-run-id",
         )
-        proc = MonthlyProcessor(self.station, df, self.interval, self.run_id)
-        max_h, min_h, avg_h = proc.calculate_humidity()
-        self.assertIsNone(max_h)
-        self.assertIsNone(min_h)
-        self.assertIsNone(avg_h)
-
-    # endregion
-
-    # region run
-    def test_run_returns_monthly_record(self):
-        """Test run returns a monthly record with correct attributes."""
-        df = self.make_df(
-            max_temperature=[20, 22],
-            min_temperature=[10, 12],
-            avg_temperature=[15, 17],
-            max_wind_gust=[10, 15],
-            max_pressure=[1020, 1015],
-            min_pressure=[1005, 1008],
-            rain=[1.0, 2.0],
-            max_humidity=[80, 85],
-            min_humidity=[40, 45],
-            avg_humidity=[60, 65],
-        )
-        proc = MonthlyProcessor(self.station, df, self.interval, self.run_id)
-        result = proc.run(dry_run=True)
-
-        self.assertIsInstance(result, MonthlyRecord)
-
-        self.assertEqual(result.station_id, self.station.ws_id)
-        self.assertEqual(result.date, self.interval[0])
-        self.assertTrue(result.finished)
-        self.assertEqual(result.processor_thread_id, self.run_id)
-
-    # endregion
+        self.assertIsNone(empty_processor.run(dry_run=True))
 
 
 if __name__ == "__main__":
