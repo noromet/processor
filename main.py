@@ -40,12 +40,6 @@ def get_args():
         help="Processing mode",
     )
     parser.add_argument(
-        "--single-thread",
-        action="store_true",
-        default=False,
-        help="Force single threaded execution",
-    )
-    parser.add_argument(
         "--year",
         type=int,
         help="Year component of the date.",
@@ -91,11 +85,6 @@ def get_args():
         args.date = date(args.year, 1, 1)
 
     args.db_url = os.getenv("DATABASE_CONNECTION_URL", "")
-
-    if args.single_thread:
-        args.max_threads = 1
-    else:
-        args.max_threads = os.cpu_count() or 1
 
     return args
 
@@ -169,8 +158,6 @@ class Main:
         self.date = args.date
         self.mode = args.mode
 
-        self.single_thread = args.single_thread
-        self.max_threads = args.max_threads
         self.all_stations = args.all
         self.station_id = args.id
 
