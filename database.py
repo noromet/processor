@@ -20,6 +20,7 @@ from schema import (
     WeatherStation,
     WeatherRecord,
     ProcessorThread,
+    MonthlyUpdateQueue,
 )
 
 
@@ -411,6 +412,36 @@ class Database:
                     processor_thread.command,
                     processor_thread.processed_date,
                 ),
+            )
+
+    @classmethod
+    def get_monthly_update_queue_items(cls):
+        """Get all items in the monthly update queue."""
+        with CursorFromConnectionFromPool() as cursor:
+            cursor.execute(
+                """
+                SELECT id, station_id, year, month
+                FROM monthly_update_queue
+                """
+            )
+            column_names = [desc[0] for desc in cursor.description]
+            records = cursor.fetchall()
+            monthly_update_queue_items = [
+                MonthlyUpdateQueue(**dict(zip(column_names, row))) for row in records
+            ]
+
+            return monthly_update_queue_items
+
+    @classmethod
+    def delete_monthly_update_queue_item(cls, item_id: str) -> None:
+        """Delete an item from the monthly update queue."""
+        with CursorFromConnectionFromPool() as cursor:
+            cursor.execute(
+                """
+                DELETE FROM monthly_update_queue
+                WHERE id = %s
+                """,
+                (item_id,),
             )
 
 

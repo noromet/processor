@@ -113,3 +113,15 @@ class ProcessorThread:
     thread_timestamp: datetime.datetime
     command: str
     processed_date: datetime.date
+
+
+@dataclass
+class MonthlyUpdateQueue:
+    """
+    Represents an entry in the monthly update queue.
+    """
+
+    id: uuid.UUID
+    station_id: uuid.UUID
+    year: int
+    month: int

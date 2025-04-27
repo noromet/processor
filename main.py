@@ -19,7 +19,7 @@ from processors import Processor, DailyProcessor, MonthlyProcessor
 from database import Database, database_connection
 from schema import ProcessorThread
 
-load_dotenv(verbose=True)
+load_dotenv(verbose=True, dotenv_path=".env")
 
 
 # region argument processing
@@ -34,9 +34,12 @@ def get_args():
     parser.add_argument("--id", type=str, help="Read a single weather station by id")
     parser.add_argument("--dry-run", action="store_true", help="Perform a dry run")
     parser.add_argument(
+        "--process-pending", action="store_true", help="Process pending records"
+    )
+    parser.add_argument(
         "--mode",
-        choices=["daily", "monthly", "yearly"],
-        default="daily",
+        choices=["daily", "monthly"],
+        required=True,
         help="Processing mode",
     )
     parser.add_argument(
@@ -160,6 +163,7 @@ class Main:
 
         self.all_stations = args.all
         self.station_id = args.id
+        self.process_pending = args.process_pending
 
         self.run_id = str(uuid.uuid4())
         self.thread = ProcessorThread(
@@ -266,6 +270,80 @@ class Main:
                 )
             )
 
+    def fill_up_queue_with_pending(self):
+        """
+        Fill up the processing queue the records for stations and dates
+        that are pending reprocessing into a monthly record.
+        """
+        pending_queue_entries = Database.get_monthly_update_queue_items()
+        if len(pending_queue_entries) == 0:
+            logging.info("No pending records to process.")
+            return
+
+        for entry in pending_queue_entries:
+            station = Database.get_single_station(entry.station_id)
+            if station is None:
+                logging.error(
+                    "Pending station with ID %s not found. (Entry ID %s)",
+                    entry.station_id,
+                    entry.id,
+                )
+                continue
+
+            interval = (
+                datetime(
+                    entry.year,
+                    entry.month,
+                    1,
+                    0,
+                    0,
+                    0,
+                    0,
+                    zoneinfo.ZoneInfo("UTC"),
+                ),
+                datetime(
+                    entry.year,
+                    entry.month + 1 if entry.month < 12 else 1,
+                    1 if entry.month < 12 else 1,
+                    0,
+                    0,
+                    0,
+                    0,
+                    zoneinfo.ZoneInfo("UTC"),
+                )
+                - timedelta(seconds=1),
+            )
+            records = Database.get_daily_records_for_station_and_interval(
+                station_id=str(station.ws_id),
+                start_date=interval[0],
+                end_date=interval[1],
+            )
+
+            if len(records) == 0:
+                logging.warning(
+                    "No daily records found for station %s in interval %s-%s",
+                    station.location,
+                    interval[0].date(),
+                    interval[1].date(),
+                )
+                continue
+            self.processing_queue.put(
+                MonthlyProcessor(
+                    station=station,
+                    records=pd.DataFrame(records),
+                    interval=interval,
+                    run_id=self.run_id,
+                )
+            )
+            logging.info(
+                "Added pending record for station %s in interval %s-%s",
+                station.location,
+                interval[0].date(),
+                interval[1].date(),
+            )
+            Database.delete_monthly_update_queue_item(entry.id)
+            logging.info("Deleted entry %s from the queue.", entry.id)
+
     def process_queue(self):
         """Process the records in the queue."""
         while not self.processing_queue.empty():
@@ -305,6 +383,10 @@ class Main:
 
                 case "monthly":
                     self.fill_up_monthly_queue()
+
+            if self.process_pending:
+                logging.info("Processing pending records.")
+                self.fill_up_queue_with_pending()
 
             logging.info("Starting processing. Run ID: %s", self.run_id)
 

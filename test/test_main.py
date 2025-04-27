@@ -84,12 +84,18 @@ class TestMain(unittest.TestCase):
         self.assertIsNotNone(main_instance.thread)
         self.assertIsNone(main_instance.scheduler)
 
+    @patch("main.Database.get_monthly_update_queue_items")
     @patch("database.Database.get_present_timezones")
     @patch("main.get_args")
     @patch("main.database_connection")
     @patch("main.Main.get_stations")
     def test_run_daily_mode(
-        self, mock_get_stations, mock_db_conn, mock_get_args, mock_get_tz
+        self,
+        mock_get_stations,
+        mock_db_conn,
+        mock_get_args,
+        mock_get_tz,
+        mock_get_queue,
     ):
         """Test Main.run method in daily mode."""
         # Setup
@@ -105,6 +111,7 @@ class TestMain(unittest.TestCase):
         mock_db_conn.return_value.__enter__.return_value = None
         mock_get_stations.return_value = []
         mock_get_tz.return_value = self.tz_names
+        mock_get_queue.return_value = []
 
         # Execute
         with patch("main.config_logger"), patch("main.Database.save_processor_thread"):
@@ -116,10 +123,13 @@ class TestMain(unittest.TestCase):
         self.assertTrue(mock_db_conn.called)
         self.assertTrue(mock_get_stations.called)
 
+    @patch("main.Database.get_monthly_update_queue_items")
     @patch("main.get_args")
     @patch("main.database_connection")
     @patch("main.Main.get_stations")
-    def test_run_monthly_mode(self, mock_get_stations, mock_db_conn, mock_get_args):
+    def test_run_monthly_mode(
+        self, mock_get_stations, mock_db_conn, mock_get_args, mock_get_queue
+    ):
         """Test Main.run method in monthly mode."""
         # Setup
         mock_args = unittest.mock.MagicMock()
@@ -133,6 +143,7 @@ class TestMain(unittest.TestCase):
 
         mock_db_conn.return_value.__enter__.return_value = None
         mock_get_stations.return_value = []
+        mock_get_queue.return_value = []
 
         # Execute
         with patch("main.config_logger"), patch("main.Scheduler"), patch(
