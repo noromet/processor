@@ -5,6 +5,9 @@ This script is designed to be run from the command line.
 
 import unittest
 import sys
+import logging
+
+logging.disable(logging.CRITICAL)  # Disable logging for test runs
 
 
 def run_all_tests():

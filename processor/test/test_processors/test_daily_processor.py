@@ -8,12 +8,12 @@ import datetime
 import pandas as pd
 
 from processor.schema import WeatherStation, DailyRecord
-from processor.processors.daily_processor import DailyProcessor
+from processor.builders.daily_builder import DailyBuilder
 
 
-class TestDailyProcessor(unittest.TestCase):
+class TestDailyBuilder(unittest.TestCase):
     """
-    Test suite for the DailyProcessor class that processes daily weather data.
+    Test suite for the DailyBuilder class that processes daily weather data.
     """
 
     def setUp(self):
@@ -52,7 +52,7 @@ class TestDailyProcessor(unittest.TestCase):
         )
 
         # Create processor
-        self.processor = DailyProcessor(
+        self.processor = DailyBuilder(
             station=self.station,
             records=self.records,
             date=self.date,
@@ -149,7 +149,7 @@ class TestDailyProcessor(unittest.TestCase):
         self.assertIsInstance(record, DailyRecord)
 
         # Test with empty records
-        empty_processor = DailyProcessor(
+        empty_processor = DailyBuilder(
             station=self.station,
             records=pd.DataFrame(),
             date=self.date,

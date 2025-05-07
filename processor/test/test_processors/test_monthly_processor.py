@@ -8,12 +8,12 @@ import datetime
 import pandas as pd
 
 from processor.schema import WeatherStation, MonthlyRecord
-from processor.processors.monthly_processor import MonthlyProcessor
+from processor.builders.monthly_builder import MonthlyBuilder
 
 
-class TestMonthlyProcessor(unittest.TestCase):
+class TestMonthlyBuilder(unittest.TestCase):
     """
-    Test suite for the MonthlyProcessor class that processes monthly weather data.
+    Test suite for the MonthlyBuilder class that processes monthly weather data.
     """
 
     def setUp(self):
@@ -50,7 +50,7 @@ class TestMonthlyProcessor(unittest.TestCase):
         )
 
         # Create processor
-        self.processor = MonthlyProcessor(
+        self.processor = MonthlyBuilder(
             station=self.station,
             records=self.records,
             interval=self.interval,
@@ -143,7 +143,7 @@ class TestMonthlyProcessor(unittest.TestCase):
         self.assertIsInstance(record, MonthlyRecord)
 
         # Test with empty records
-        empty_processor = MonthlyProcessor(
+        empty_processor = MonthlyBuilder(
             station=self.station,
             records=pd.DataFrame(),
             interval=self.interval,

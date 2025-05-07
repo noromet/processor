@@ -2,4 +2,4 @@
 
 from .processor import Processor
 
-__all__ = ["database", "logger", "scheduler", "schema", "processors", "Processor"]
+__all__ = ["database", "logger", "scheduler", "schema", "builders", "Processor"]

@@ -1,5 +1,5 @@
 """
-Base class for all processors.
+Base class for all builders.
 """
 
 from abc import ABC, abstractmethod
@@ -9,9 +9,9 @@ import pandas as pd
 from processor.schema import DailyRecord, MonthlyRecord, WeatherStation
 
 
-class BaseProcessor(ABC):
+class BaseBuilder(ABC):
     """
-    Abstract base class for all processors.
+    Abstract base class for all builders.
     """
 
     def __init__(self, station: WeatherStation, records: pd.DataFrame, run_id: str):

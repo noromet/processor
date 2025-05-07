@@ -8,10 +8,10 @@ import pandas as pd
 
 from processor.schema import MonthlyRecord, WeatherStation
 from processor.database import Database
-from .base_processor import BaseProcessor
+from .base_builder import BaseBuilder
 
 
-class MonthlyProcessor(BaseProcessor):
+class MonthlyBuilder(BaseBuilder):
     """
     Processes a month's worth of weather data for a given weather station and interval.
     """
@@ -24,7 +24,7 @@ class MonthlyProcessor(BaseProcessor):
         run_id: str,
     ):
         """
-        Initialize the MonthlyProcessor.
+        Initialize the MonthlyBuilder.
 
         Args:
             station (WeatherStation): The weather station object.

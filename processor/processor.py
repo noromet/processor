@@ -13,7 +13,7 @@ import os
 import pandas as pd
 
 from processor.logger import config_logger
-from processor.processors import DailyProcessor, MonthlyProcessor
+from processor.builders import DailyBuilder, MonthlyBuilder, BaseBuilder
 from processor.database import Database, database_connection
 from processor.schema import ProcessorThread
 from processor.scheduler import Scheduler
@@ -87,7 +87,7 @@ class Processor:
 
     def fill_up_daily_queue(self):
         """
-        Fill up the processing queue with DailyProcessor instances for each station.
+        Fill up the processing queue with DailyBuilder instances for each station.
         Each station's records are processed for the specified date.
         """
         full_days_intervals = self.scheduler.get_full_day_intervals()
@@ -114,7 +114,7 @@ class Processor:
                     continue
 
                 self.processing_queue.put(
-                    DailyProcessor(
+                    DailyBuilder(
                         station=station,
                         records=pd.DataFrame(records),
                         date=date_on_tz,
@@ -124,7 +124,7 @@ class Processor:
 
     def fill_up_monthly_queue(self):
         """
-        Fill up the processing queue with MonthlyProcessor instances for each station.
+        Fill up the processing queue with MonthlyBuilder instances for each station.
         Each station's records are processed for the specified month.
         """
         month_interval = self.scheduler.get_month_interval()
@@ -146,7 +146,7 @@ class Processor:
                 continue
 
             self.processing_queue.put(
-                MonthlyProcessor(
+                MonthlyBuilder(
                     station=station,
                     records=pd.DataFrame(records),
                     interval=month_interval,
@@ -212,7 +212,7 @@ class Processor:
                 )
                 continue
             self.processing_queue.put(
-                MonthlyProcessor(
+                MonthlyBuilder(
                     station=station,
                     records=pd.DataFrame(records),
                     interval=interval,
@@ -232,15 +232,16 @@ class Processor:
         """Process the records in the queue."""
         while not self.processing_queue.empty():
             processor = self.processing_queue.get()
+
+            if not isinstance(processor, BaseBuilder):
+                logging.error("Processor is not of type BaseBuilder.")
+                continue
+
             logging.info(
                 "Processing %s (%d records)",
                 processor.station.location,
                 len(processor.records),
             )
-
-            if not isinstance(processor, Processor):
-                logging.error("Processor is not of type Processor.")
-                continue
 
             result = processor.run(self.dry_run)
 

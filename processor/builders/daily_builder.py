@@ -11,10 +11,10 @@ import numpy as np
 
 from processor.schema import WeatherStation, DailyRecord
 from processor.database import Database
-from .base_processor import BaseProcessor
+from .base_builder import BaseBuilder
 
 
-class DailyProcessor(BaseProcessor):
+class DailyBuilder(BaseBuilder):
     """
     Processes raw weather station records for a single day into a DailyRecord summary.
     """
@@ -27,7 +27,7 @@ class DailyProcessor(BaseProcessor):
         run_id: str,
     ):
         """
-        Initialize the DailyProcessor.
+        Initialize the DailyBuilder.
         Args:
             station (WeatherStation): The weather station metadata.
             records (pd.DataFrame): DataFrame of raw weather records for the day.
