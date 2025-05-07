@@ -76,7 +76,7 @@ def parse_args():
     args = parser.parse_args()
 
     # Build the base arguments for main.py
-    base_args = ["python", "main.py", "--all"]
+    base_args = ["python", "main.py", "--all", "--process-pending"]
     if args.dry_run:
         base_args.append("--dry-run")
 
