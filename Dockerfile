@@ -16,12 +16,9 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy remaining files
-COPY ./schema.py ./schema.py
 COPY ./docker_entrypoint.py ./docker_entrypoint.py
 COPY ./main.py ./main.py
-COPY ./processors ./processors
-COPY ./database.py ./database.py
-COPY ./log.py ./log.py
+COPY ./processor ./processor
 # Remove any .env file to ensure it's not included in the image
 RUN rm -f .env
 

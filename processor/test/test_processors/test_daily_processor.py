@@ -7,8 +7,8 @@ import datetime
 
 import pandas as pd
 
-from schema import WeatherStation, DailyRecord
-from processors.daily_processor import DailyProcessor
+from processor.schema import WeatherStation, DailyRecord
+from processor.processors.daily_processor import DailyProcessor
 
 
 class TestDailyProcessor(unittest.TestCase):

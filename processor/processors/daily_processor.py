@@ -9,12 +9,12 @@ import logging
 import pandas as pd
 import numpy as np
 
-from schema import WeatherStation, DailyRecord
-from database import Database
-from processors.processor import Processor
+from processor.schema import WeatherStation, DailyRecord
+from processor.database import Database
+from .base_processor import BaseProcessor
 
 
-class DailyProcessor(Processor):
+class DailyProcessor(BaseProcessor):
     """
     Processes raw weather station records for a single day into a DailyRecord summary.
     """

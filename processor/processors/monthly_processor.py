@@ -6,12 +6,12 @@ import logging
 
 import pandas as pd
 
-from schema import MonthlyRecord, WeatherStation
-from database import Database
-from processors.processor import Processor
+from processor.schema import MonthlyRecord, WeatherStation
+from processor.database import Database
+from .base_processor import BaseProcessor
 
 
-class MonthlyProcessor(Processor):
+class MonthlyProcessor(BaseProcessor):
     """
     Processes a month's worth of weather data for a given weather station and interval.
     """

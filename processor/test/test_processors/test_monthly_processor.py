@@ -7,8 +7,8 @@ import datetime
 
 import pandas as pd
 
-from schema import WeatherStation, MonthlyRecord
-from processors.monthly_processor import MonthlyProcessor
+from processor.schema import WeatherStation, MonthlyRecord
+from processor.processors.monthly_processor import MonthlyProcessor
 
 
 class TestMonthlyProcessor(unittest.TestCase):

@@ -14,7 +14,7 @@ from psycopg2 import pool
 from psycopg2.extensions import connection as _connection
 from psycopg2.extensions import cursor as _cursor
 
-from schema import (
+from processor.schema import (
     DailyRecord,
     MonthlyRecord,
     WeatherStation,

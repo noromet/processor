@@ -6,10 +6,10 @@ from abc import ABC, abstractmethod
 
 import pandas as pd
 
-from schema import DailyRecord, MonthlyRecord, WeatherStation
+from processor.schema import DailyRecord, MonthlyRecord, WeatherStation
 
 
-class Processor(ABC):
+class BaseProcessor(ABC):
     """
     Abstract base class for all processors.
     """
