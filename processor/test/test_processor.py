@@ -21,7 +21,6 @@ class TestProcessor(unittest.TestCase):
         """Set up test variables."""
 
         self.process_date = date(2024, 4, 15)
-        self.db_url = "test-db-url"
         self.dry_run = True
         self.mode = "daily"
         self.process_pending = False
@@ -30,14 +29,12 @@ class TestProcessor(unittest.TestCase):
 
         # Create mock stations for reuse in tests
         self.mock_stations = [
+            WeatherStation(id="station-1", location="Location 1", local_timezone="UTC"),
             WeatherStation(
-                ws_id="station-1", location="Location 1", local_timezone="UTC"
+                id="station-2", location="Location 2", local_timezone="Europe/Madrid"
             ),
             WeatherStation(
-                ws_id="station-2", location="Location 2", local_timezone="Europe/Madrid"
-            ),
-            WeatherStation(
-                ws_id="station-3", location="Location 3", local_timezone="Europe/Lisbon"
+                id="station-3", location="Location 3", local_timezone="Europe/Lisbon"
             ),
         ]
 
@@ -68,7 +65,6 @@ class TestProcessor(unittest.TestCase):
     def get_processor(self, all_stations=False, station_id=None):
         """Create a Processor instance for testing."""
         return Processor(
-            db_url=self.db_url,
             dry_run=self.dry_run,
             process_date=self.process_date,
             mode=self.mode,
@@ -81,7 +77,6 @@ class TestProcessor(unittest.TestCase):
         """Test Processor class initialization."""
         # Test with a specific station ID
         processor_instance = self.get_processor(station_id="station-1")
-        self.assertEqual(processor_instance.db_url, self.db_url)
         self.assertEqual(processor_instance.dry_run, self.dry_run)
         self.assertEqual(processor_instance.date, self.process_date)
         self.assertEqual(processor_instance.mode, self.mode)
@@ -106,7 +101,6 @@ class TestProcessor(unittest.TestCase):
         """
         with self.assertRaises(ValueError):
             Processor(
-                db_url=self.db_url,
                 dry_run=self.dry_run,
                 process_date=self.process_date,
                 mode=self.mode,
@@ -275,14 +269,14 @@ class TestProcessor(unittest.TestCase):
         # Create mock builders
         mock_builder1 = MagicMock(BaseBuilder)
         mock_builder1.station = MagicMock(WeatherStation)
-        mock_builder1.station.ws_id = "station-1"
+        mock_builder1.station.id = "station-1"
         mock_builder1.station.location = "Location 1"
         mock_builder1.records = pd.DataFrame([1, 2, 3])
         mock_builder1.run.return_value = True
 
         mock_builder2 = MagicMock(BaseBuilder)
         mock_builder2.station = MagicMock(WeatherStation)
-        mock_builder2.station.ws_id = "station-2"
+        mock_builder2.station.id = "station-2"
         mock_builder2.station.location = "Location 2"
         mock_builder2.records = pd.DataFrame([4, 5, 6])
         mock_builder2.run.return_value = False

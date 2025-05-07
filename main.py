@@ -6,10 +6,12 @@ Runs daily or monthly processing of weather records.
 import os
 import argparse
 from datetime import date
+import logging
 
 from dotenv import load_dotenv
 
 from processor import Processor
+from processor.database import database_connection
 
 load_dotenv(verbose=True, dotenv_path=".env")
 
@@ -87,17 +89,20 @@ def main():
     """Main function to run the weather record processing."""
 
     args = get_args()
-    main_instance = Processor(
-        db_url=args.db_url,
-        dry_run=args.dry_run,
-        process_date=args.date,
-        mode=args.mode,
-        all_stations=args.all,
-        station_id=args.id,
-        process_pending=args.process_pending,
-    )
 
-    main_instance.run()
+    with database_connection(args.db_url):
+        logging.info("Connected to database.")
+
+        main_instance = Processor(
+            dry_run=args.dry_run,
+            process_date=args.date,
+            mode=args.mode,
+            all_stations=args.all,
+            station_id=args.id,
+            process_pending=args.process_pending,
+        )
+
+        main_instance.run()
 
 
 if __name__ == "__main__":

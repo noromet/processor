@@ -23,7 +23,7 @@ class TestMonthlyBuilder(unittest.TestCase):
         """
         # Create a mock weather station
         self.station = WeatherStation(
-            ws_id="test-station",
+            id="test-station",
             location="Test Station",
             local_timezone="Europe/Madrid",
         )

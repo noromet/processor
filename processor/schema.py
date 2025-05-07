@@ -14,7 +14,7 @@ class WeatherStation:
     Represents a weather station.
     """
 
-    ws_id: uuid.UUID
+    id: uuid.UUID
     location: str
     local_timezone: zoneinfo.ZoneInfo
 

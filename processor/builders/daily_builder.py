@@ -58,7 +58,7 @@ class DailyBuilder(BaseBuilder):
 
         return DailyRecord(
             id=None,
-            station_id=str(self.station.ws_id),
+            station_id=str(self.station.id),
             date=self.date,
             max_temperature=max_temperature,
             min_temperature=min_temperature,

@@ -14,7 +14,7 @@ import pandas as pd
 
 from processor.logger import config_logger
 from processor.builders import DailyBuilder, MonthlyBuilder, BaseBuilder
-from processor.database import Database, database_connection
+from processor.database import Database
 from processor.schema import ProcessorThread
 from processor.scheduler import Scheduler
 
@@ -24,7 +24,6 @@ class Processor:
 
     def __init__(
         self,
-        db_url: str,
         dry_run: bool,
         process_date: date,
         mode: str,
@@ -33,7 +32,6 @@ class Processor:
         station_id: str = None,
     ):
 
-        self.db_url = db_url
         self.dry_run = dry_run
         self.date = process_date
         self.mode = mode
@@ -100,7 +98,7 @@ class Processor:
 
             for station in stations_for_tz:
                 records = Database.get_weather_records_for_station_and_interval(
-                    station_id=str(station.ws_id),
+                    station_id=str(station.id),
                     date_from=interval[0],
                     date_to=interval[1],
                 )
@@ -131,7 +129,7 @@ class Processor:
 
         for station in self.stations:
             records = Database.get_daily_records_for_station_and_interval(
-                station_id=str(station.ws_id),
+                station_id=str(station.id),
                 start_date=month_interval[0],
                 end_date=month_interval[1],
             )
@@ -198,7 +196,7 @@ class Processor:
                 - timedelta(seconds=1),
             )
             records = Database.get_daily_records_for_station_and_interval(
-                station_id=str(station.ws_id),
+                station_id=str(station.id),
                 start_date=interval[0],
                 end_date=interval[1],
             )
@@ -246,44 +244,41 @@ class Processor:
             result = processor.run(self.dry_run)
 
             if result:
-                logging.info("Successfully processed %s", processor.station.ws_id)
+                logging.info("Successfully processed %s", processor.station.id)
             else:
-                logging.error("Did not process %s", processor.station.ws_id)
+                logging.error("Did not process %s", processor.station.id)
 
     def run(self):
         """Main entry point for weather record processing."""
-        with database_connection(self.db_url):
-            self.scheduler = Scheduler(self.date)
+        self.scheduler = Scheduler(self.date)
 
-            logging.info("Connected to database.")
+        if self.dry_run:
+            logging.info("Dry run enabled.")
+        else:
+            logging.warning("Dry run disabled.")
 
-            if self.dry_run:
-                logging.info("Dry run enabled.")
-            else:
-                logging.warning("Dry run disabled.")
+        match self.mode:
+            case "daily":
+                self.fill_up_daily_queue()
 
-            match self.mode:
-                case "daily":
-                    self.fill_up_daily_queue()
+            case "monthly":
+                self.fill_up_monthly_queue()
 
-                case "monthly":
-                    self.fill_up_monthly_queue()
+        if self.process_pending:
+            logging.info("Processing pending records.")
+            self.fill_up_queue_with_pending()
 
-            if self.process_pending:
-                logging.info("Processing pending records.")
-                self.fill_up_queue_with_pending()
+        logging.info("Starting processing. Run ID: %s", self.run_id)
 
-            logging.info("Starting processing. Run ID: %s", self.run_id)
+        if not self.processing_queue.empty():
+            Database.save_processor_thread(
+                self.thread
+            )  # creating before the assignment
+            logging.info("Saved thread with id %s.", self.thread.thread_id)
 
-            if not self.processing_queue.empty():
-                Database.save_processor_thread(
-                    self.thread
-                )  # creating before the assignment
-                logging.info("Saved thread with id %s.", self.thread.thread_id)
+            self.process_queue()
 
-                self.process_queue()
+        else:
+            logging.warning("No records to process.")
 
-            else:
-                logging.warning("No records to process.")
-
-            logging.info("Processor done.")
+        logging.info("Processor done.")

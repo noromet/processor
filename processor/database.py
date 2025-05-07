@@ -102,7 +102,7 @@ class Database:
             stations = cursor.fetchall()
             return [
                 WeatherStation(
-                    ws_id=uuid.UUID(station[0]),
+                    id=uuid.UUID(station[0]),
                     location=station[1],
                     local_timezone=zoneinfo.ZoneInfo(station[2]),
                 )
@@ -122,7 +122,7 @@ class Database:
             station = cursor.fetchone()
             if station:
                 return WeatherStation(
-                    ws_id=uuid.UUID(station[0]),
+                    id=uuid.UUID(station[0]),
                     location=station[1],
                     local_timezone=zoneinfo.ZoneInfo(station[2]),
                 )

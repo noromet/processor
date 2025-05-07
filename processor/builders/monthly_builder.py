@@ -57,7 +57,7 @@ class MonthlyBuilder(BaseBuilder):
 
         return MonthlyRecord(
             id=None,
-            station_id=str(self.station.ws_id),
+            station_id=str(self.station.id),
             date=self.interval[0],
             avg_max_temperature=avg_max_temperature,
             avg_min_temperature=avg_min_temperature,
