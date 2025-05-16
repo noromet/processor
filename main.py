@@ -12,6 +12,7 @@ from dotenv import load_dotenv
 
 from processor import Processor
 from processor.database import database_connection
+from processor.logger import config_logger
 
 load_dotenv(verbose=True, dotenv_path=".env")
 
@@ -89,6 +90,8 @@ def main():
     """Main function to run the weather record processing."""
 
     args = get_args()
+
+    config_logger(debug=args.dry_run)
 
     with database_connection(args.db_url):
         logging.info("Connected to database.")

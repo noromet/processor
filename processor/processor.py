@@ -8,11 +8,10 @@ import queue
 import uuid
 from datetime import datetime, timedelta, date, timezone
 import logging
-import os
+import sys
 
 import pandas as pd
 
-from processor.logger import config_logger
 from processor.builders import DailyBuilder, MonthlyBuilder, BaseBuilder
 from processor.database import Database
 from processor.schema import ProcessorThread
@@ -51,13 +50,12 @@ class Processor:
         self.thread = ProcessorThread(
             thread_id=self.run_id,
             thread_timestamp=datetime.now(timezone.utc),
-            command=" ".join(os.sys.argv),
+            command=" ".join(sys.argv),
             processed_date=self.date,
         )
 
         self.scheduler = None  # needs db connection, so it's created later
         self.processing_queue = queue.Queue()
-        config_logger(debug=self.dry_run)
 
     def get_all_stations(self) -> list:
         """

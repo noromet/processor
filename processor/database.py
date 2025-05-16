@@ -159,7 +159,12 @@ class Database:
                 wind_gust, 
                 max_wind_gust
             FROM weather_record
-            WHERE station_id = %s AND source_timestamp >= %s AND source_timestamp <= %s
+            WHERE 
+                station_id = %s 
+                AND source_timestamp >= %s 
+                AND source_timestamp <= %s 
+                AND taken_timestamp >= %s 
+                AND taken_timestamp <= %s 
             ORDER BY source_timestamp asc
         """
 

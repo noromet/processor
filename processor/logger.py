@@ -30,10 +30,17 @@ def config_logger(debug: bool = False) -> None:
     """
     Configures the logger to use a custom formatter with colors for different log levels.
     """
+    # Get the root logger
+    logger = logging.getLogger()
+
+    # Remove any existing handlers to avoid duplication
+    for handler in logger.handlers[:]:
+        logger.removeHandler(handler)
+
+    # Add our custom handler
     handler = logging.StreamHandler()
     formatter = ColoredFormatter("[%(asctime)s] %(levelname)s: %(message)s")
     handler.setFormatter(formatter)
 
-    logger = logging.getLogger()
     logger.setLevel(logging.DEBUG if debug else logging.INFO)
     logger.addHandler(handler)

@@ -43,6 +43,7 @@ class DailyBuilder(BaseBuilder):
         Returns:
             DailyRecord: The processed daily summary record.
         """
+
         flagged = self.calculate_flagged()
         max_pressure, min_pressure = self.calculate_pressure()
         max_wind_speed, max_wind_gust, avg_wind_direction = self.calculate_wind()
@@ -197,6 +198,8 @@ class DailyBuilder(BaseBuilder):
         """
         df = self.records
 
+        df = df.dropna(subset=["temperature", "max_temperature", "min_temperature"])
+
         # Calculate max temperature
         max_temperature_max = float(df["max_temperature"].max())
         temperature_max = float(df["temperature"].max())
@@ -216,9 +219,6 @@ class DailyBuilder(BaseBuilder):
             min_temperature = min_temperature_min
         else:
             min_temperature = min(min_temperature_min, temperature_min)
-
-        # Remove rows with NaN in temperature
-        df = df.dropna(subset=["temperature"])
 
         # Calculate average temperature
         avg_temperature = float(df["temperature"].mean())
