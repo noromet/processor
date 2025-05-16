@@ -169,7 +169,7 @@ class Database:
         """
 
         with CursorFromConnectionFromPool() as cursor:
-            cursor.execute(query, (station_id, date_from, date_to))
+            cursor.execute(query, (station_id, date_from, date_to, date_from, date_to))
             column_names = [desc[0] for desc in cursor.description]
             records = cursor.fetchall()
 
