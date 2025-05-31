@@ -11,6 +11,7 @@ repos:
     rev: v3.3.6  # Use the latest stable version
     hooks:
       - id: pylint
+        exclude: docs/
         args:
           - --disable=import-error
           - --disable=too-many-instance-attributes
