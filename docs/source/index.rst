@@ -2,7 +2,7 @@
 Processor Documentation
 =======================
 
-Documentation file for the gatherer package.
+Documentation file for the processor package.
 
 
 .. toctree::
