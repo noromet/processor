@@ -28,17 +28,30 @@ class CursorFromConnectionFromPool:
     """Context manager for PostgreSQL cursor."""
 
     def __init__(self):
+        """Initialize the cursor context manager."""
         self.connection: Optional[_connection] = None
         self.cursor: Optional[_cursor] = None
 
     def __enter__(self) -> _cursor:
-        """Enter the context manager."""
+        """
+        Enter the context manager and get a cursor.
+
+        Returns:
+            _cursor: A database cursor connected to the PostgreSQL database.
+        """
         self.connection = Database.get_connection()
         self.cursor = self.connection.cursor()
         return self.cursor
 
     def __exit__(self, exception_type, exception_value, exception_traceback) -> None:
-        """Exit the context manager."""
+        """
+        Exit the context manager, commit or rollback transaction, and return connection to pool.
+
+        Args:
+            exception_type: The type of exception raised (if any).
+            exception_value: The exception raised (if any).
+            exception_traceback: The traceback for the exception (if any).
+        """
         if exception_value:
             self.connection.rollback()
         else:
@@ -54,12 +67,25 @@ class Database:
 
     @classmethod
     def initialize(cls, connection_string: str) -> None:
-        """Initialize the connection pool."""
+        """
+        Initialize the database connection pool.
+
+        Args:
+            connection_string (str): PostgreSQL connection string.
+        """
         cls.__connection_pool = pool.SimpleConnectionPool(1, 10, dsn=connection_string)
 
     @classmethod
     def get_connection(cls) -> _connection:
-        """Get a connection from the pool."""
+        """
+        Get a connection from the pool.
+
+        Returns:
+            _connection: A PostgreSQL database connection.
+
+        Raises:
+            psycopg2.OperationalError: If the connection pool is not initialized.
+        """
         if cls.__connection_pool is None:
             raise psycopg2.OperationalError("Connection pool is not initialized.")
         conn = cls.__connection_pool.getconn()
@@ -68,7 +94,12 @@ class Database:
 
     @classmethod
     def return_connection(cls, connection: _connection) -> None:
-        """Return a connection to the pool."""
+        """
+        Return a connection to the pool.
+
+        Args:
+            connection (_connection): The connection to return to the pool.
+        """
         cls.__connection_pool.putconn(connection)
 
     @classmethod
@@ -79,7 +110,15 @@ class Database:
     @classmethod
     @contextmanager
     def transaction(cls):
-        """Context manager for running multiple statements in a single transaction."""
+        """
+        Context manager for running multiple statements in a single transaction.
+
+        Yields:
+            _cursor: A database cursor for executing SQL statements.
+
+        Raises:
+            Exception: Propagates any exception that occurs during transaction execution.
+        """
         conn = cls.get_connection()
         cursor = conn.cursor()
         try:
@@ -94,7 +133,12 @@ class Database:
 
     @classmethod
     def get_all_stations(cls) -> List[WeatherStation]:
-        """Get all active weather stations."""
+        """
+        Get all active weather stations from the database.
+
+        Returns:
+            List[WeatherStation]: A list of active WeatherStation objects.
+        """
         with CursorFromConnectionFromPool() as cursor:
             cursor.execute(
                 "SELECT id, location, local_timezone FROM weather_station WHERE status = 'active'"
@@ -111,7 +155,15 @@ class Database:
 
     @classmethod
     def get_single_station(cls, station_id: str) -> WeatherStation:
-        """Get a single weather station by ID."""
+        """
+        Get a single weather station by ID.
+
+        Args:
+            station_id (str): The ID of the station to retrieve.
+
+        Returns:
+            WeatherStation: The weather station object, or None if not found.
+        """
         with CursorFromConnectionFromPool() as cursor:
             cursor.execute(
                 "SELECT id, location, local_timezone "
@@ -132,7 +184,20 @@ class Database:
     def get_weather_records_for_station_and_interval(
         cls, station_id: str, date_from: datetime.datetime, date_to: datetime.datetime
     ) -> List[WeatherRecord]:
-        """Get all weather records for a specific station and date range."""
+        """
+        Get all weather records for a specific station and date range.
+
+        Args:
+            station_id (str): The ID of the weather station.
+            date_from (datetime.datetime): Start datetime for retrieving records.
+            date_to (datetime.datetime): End datetime for retrieving records.
+
+        Returns:
+            List[WeatherRecord]: A list of WeatherRecord objects for the station in the date range.
+
+        Raises:
+            AssertionError: If date_from and date_to do not have the same timezone info.
+        """
 
         # assert both datetimes have the same timezone and tzinfo
         assert date_from.tzinfo == date_to.tzinfo
@@ -183,7 +248,17 @@ class Database:
     def get_daily_records_for_station_and_interval(
         cls, station_id: str, start_date: datetime.date, end_date
     ) -> List[DailyRecord]:
-        """Get all daily records for a specific station and date."""
+        """
+        Get all daily records for a specific station and date range.
+
+        Args:
+            station_id (str): The ID of the weather station.
+            start_date (datetime.date): Start date for retrieving records.
+            end_date (datetime.date): End date for retrieving records.
+
+        Returns:
+            List[DailyRecord]: A list of DailyRecord objects for the station in the date range.
+        """
 
         with CursorFromConnectionFromPool() as cursor:
             cursor.execute(

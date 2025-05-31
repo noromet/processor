@@ -22,8 +22,14 @@ def parse_args():
     """
     Parse command line arguments and convert them to main.py arguments.
 
+    Processes convenience options like --yesterday or --this-month and converts them
+    to appropriate arguments for main.py.
+
     Returns:
-        list: Arguments to pass to main.py
+        list: List of command line arguments to pass to main.py
+
+    Raises:
+        SystemExit: If an invalid date or month format is provided
     """
     parser = argparse.ArgumentParser(
         description="Docker entrypoint for Weather Station Data Processor"
@@ -174,6 +180,15 @@ def parse_args():
 def main():
     """
     Main entrypoint function that converts arguments and calls the main processor.
+
+    Parses arguments, prepares the command to run main.py with appropriate parameters,
+    and executes the command. Handles process exit codes and exceptions.
+
+    Returns:
+        None
+
+    Raises:
+        SystemExit: With appropriate exit code based on subprocess execution
     """
     cmd_args = parse_args()
 

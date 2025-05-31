@@ -30,6 +30,20 @@ class Processor:
         all_stations: bool = False,
         station_id: str = None,
     ):
+        """
+        Initialize the Processor instance.
+
+        Args:
+            dry_run (bool): Whether to run in dry-run mode without saving to database.
+            process_date (date): Date to process data for.
+            mode (str): Processing mode ('daily' or 'monthly').
+            process_pending (bool): Whether to process records from the pending queue.
+            all_stations (bool, optional): Whether to process all stations. Defaults to False.
+            station_id (str, optional): ID of a specific station to process. Defaults to None.
+
+        Raises:
+            ValueError: If both all_stations and station_id are specified.
+        """
 
         self.dry_run = dry_run
         self.date = process_date
@@ -59,7 +73,11 @@ class Processor:
 
     def get_all_stations(self) -> list:
         """
-        Retrieve all active stations.
+        Retrieve all active weather stations from the database.
+
+        Returns:
+            list: List of WeatherStation objects representing all active stations.
+                  Returns empty list if no active stations are found.
         """
         stations = Database.get_all_stations()
 
@@ -72,6 +90,13 @@ class Processor:
     def get_single_station(self, station_id: str) -> list:
         """
         Retrieve a single station by its ID.
+
+        Args:
+            station_id (str): ID of the station to retrieve.
+
+        Returns:
+            list: A list containing the WeatherStation object if found,
+                  or an empty list if not found.
         """
         station = Database.get_single_station(station_id)
 
@@ -84,7 +109,9 @@ class Processor:
     def fill_up_daily_queue(self):
         """
         Fill up the processing queue with DailyBuilder instances for each station.
-        Each station's records are processed for the specified date.
+
+        For each station in the specified date, creates a DailyBuilder instance
+        and adds it to the processing queue. Skips stations with no records.
         """
         full_days_intervals = self.scheduler.get_full_day_intervals()
 
@@ -121,7 +148,9 @@ class Processor:
     def fill_up_monthly_queue(self):
         """
         Fill up the processing queue with MonthlyBuilder instances for each station.
-        Each station's records are processed for the specified month.
+
+        For the specified month, creates a MonthlyBuilder instance for each station
+        and adds it to the processing queue. Skips stations with no daily records.
         """
         month_interval = self.scheduler.get_month_interval()
 
@@ -152,8 +181,10 @@ class Processor:
 
     def fill_up_queue_with_pending(self):
         """
-        Fill up the processing queue the records for stations and dates
-        that are pending reprocessing into a monthly record.
+        Fill up the processing queue with records from the pending queue.
+
+        Fetches items from the monthly update queue and creates appropriate
+        MonthlyBuilder instances. Deletes processed queue entries on success.
         """
         pending_queue_entries = Database.get_monthly_update_queue_items()
         if len(pending_queue_entries) == 0:
@@ -225,7 +256,12 @@ class Processor:
             logging.info("Deleted entry %s from the queue.", entry.id)
 
     def process_queue(self):
-        """Process the records in the queue."""
+        """
+        Process all items in the processing queue.
+
+        Takes builder objects from the queue and runs them one by one.
+        Logs success or failure for each processing operation.
+        """
         while not self.processing_queue.empty():
             processor = self.processing_queue.get()
 
@@ -247,7 +283,12 @@ class Processor:
                 logging.error("Did not process %s", processor.station.id)
 
     def run(self):
-        """Main entry point for weather record processing."""
+        """
+        Main entry point for weather record processing.
+
+        Initializes the scheduler, fills the queue according to the specified mode,
+        and processes all queued items. Saves processor thread information to database.
+        """
         self.scheduler = Scheduler(self.date)
 
         if self.dry_run:

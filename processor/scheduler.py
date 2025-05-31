@@ -43,8 +43,8 @@ class Scheduler:
             full_day_intervals[tz] = (start_of_day, end_of_day)
         return full_day_intervals
 
-    def get_month_interval(self):
-        """Get start and end datetimes for the month interval in UTC timezone."""
+    def get_month_interval(self) -> dict:
+        """Get start a n-d end datetimes for the month interval in UTC timezone."""
         tz = zoneinfo.ZoneInfo("UTC")
         start_of_month = datetime(
             self.process_date.year, self.process_date.month, 1, 0, 0, 0, 0, tz

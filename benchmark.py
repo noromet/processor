@@ -20,9 +20,17 @@ logging.disable(logging.CRITICAL)  # Disable logging for test runs
 N_STATIONS = [10, 100, 250, 500, 750, 1000]
 
 
-def _get_records_for_day(station):
+def _get_records_for_day(station: WeatherStation) -> pd.DataFrame:
     """
-    Generate mock records for a day.
+    Generate mock records for a day for a specific weather station.
+
+    Creates a set of mock weather records at 15-minute intervals for a 24-hour period.
+
+    Args:
+        station (WeatherStation): The weather station to generate records for.
+
+    Returns:
+        pd.DataFrame: DataFrame containing mock weather records.
     """
 
     n_records = 24 * (60 / 15)
@@ -57,6 +65,13 @@ def _get_records_for_day(station):
 def benchmark():
     """
     Entry point to the benchmark and graphing process.
+
+    Runs performance tests with varying numbers of weather stations and
+    generates a graph showing processing time vs. number of stations.
+    The results are saved as a PNG image and displayed on screen.
+
+    Returns:
+        None
     """
 
     results = {n_stations: 0 for n_stations in N_STATIONS}
@@ -87,6 +102,15 @@ def benchmark():
 def _run(n_stations):
     """
     Run the benchmark for a given number of stations.
+
+    Sets up mock weather stations and processors, populates the processing queue
+    with DailyBuilder instances, and measures the time taken to process them.
+
+    Args:
+        n_stations (int): Number of stations to include in the benchmark.
+
+    Returns:
+        float: Elapsed time in seconds for processing all stations.
     """
     # Create stations list
     stations = [

@@ -11,7 +11,14 @@ logging.disable(logging.CRITICAL)  # Disable logging for test runs
 
 
 def run_all_tests():
-    """Run all tests in the project"""
+    """
+    Run all tests in the project.
+
+    Discovers and runs all test cases in the 'test' directory.
+
+    Returns:
+        int: Exit code - 0 if all tests passed, 1 otherwise.
+    """
     test_loader = unittest.defaultTestLoader
 
     # Discover all tests in the test directory
