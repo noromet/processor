@@ -36,7 +36,7 @@ def get_args():
         choices=["monthly", "daily"],
     )
     parser.add_argument(
-        "--station_id",
+        "--station-id",
         type=str,
         required=False,
         default=None,

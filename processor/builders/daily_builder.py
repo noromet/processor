@@ -199,6 +199,8 @@ class DailyBuilder(BaseBuilder):
         df = self.records
 
         df = df.dropna(subset=["temperature", "max_temperature", "min_temperature"])
+        if df.empty:
+            return None, None, None
 
         # Calculate max temperature
         max_temperature_max = float(df["max_temperature"].max())
