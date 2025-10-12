@@ -198,7 +198,9 @@ class DailyBuilder(BaseBuilder):
         """
         df = self.records
 
-        df = df.dropna(subset=["temperature", "max_temperature", "min_temperature"])
+        df = df.dropna(
+            subset=["temperature", "max_temperature", "min_temperature"], how="all"
+        )
         if df.empty:
             return None, None, None
 
