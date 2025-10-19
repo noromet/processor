@@ -153,6 +153,16 @@ class DailyBuilder(BaseBuilder):
         max_global_wind_speed = df[wind_columns].max().max()
         max_global_wind_gust = df[wind_gust_columns].max().max()
 
+        if pd.isna(max_global_wind_speed):
+            max_global_wind_speed = None
+        else:
+            max_global_wind_speed = float(max_global_wind_speed)
+
+        if pd.isna(max_global_wind_gust):
+            max_global_wind_gust = None
+        else:
+            max_global_wind_gust = float(max_global_wind_gust)
+
         wind_speed_column = "wind_speed"
         wind_direction_column = "wind_direction"
 
@@ -162,8 +172,8 @@ class DailyBuilder(BaseBuilder):
         if valid_data.empty or valid_data[wind_speed_column].sum() == 0:
             avg_wind_direction = None  # Default value for average wind direction
             return (
-                float(max_global_wind_speed),
-                float(max_global_wind_gust),
+                max_global_wind_speed,
+                max_global_wind_gust,
                 avg_wind_direction,
             )
 
@@ -185,8 +195,8 @@ class DailyBuilder(BaseBuilder):
         )  # Normalize to [0, 360)
 
         return (
-            float(max_global_wind_speed),
-            float(max_global_wind_gust),
+            max_global_wind_speed,
+            max_global_wind_gust,
             int(avg_wind_direction),
         )
 
@@ -226,6 +236,8 @@ class DailyBuilder(BaseBuilder):
 
         # Calculate average temperature
         avg_temperature = float(df["temperature"].mean())
+        if pd.isna(avg_temperature):
+            avg_temperature = None
 
         return max_temperature, min_temperature, avg_temperature
 
